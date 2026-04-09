@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Lock, Unlock, Moon, Sun, Plus, Minus, RefreshCw, Copy, GripVertical } from "lucide-react";
+import { Lock, Unlock, Layers, Plus, Minus, RefreshCw, Copy, GripVertical } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COLORS, type ColorItem } from "@/lib/ohuhu-colors";
 import {
@@ -105,7 +105,7 @@ function SortableColorCard({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={setActivePopoverId}
             className="p-1.5 rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm transition flex items-center justify-center z-10 cursor-pointer sm:opacity-0 sm:group-hover:opacity-100" title="Shadow & Highlight">
-            {isActivePopover ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            <Layers className="w-4 h-4" />
           </button>
 
           <button
@@ -145,18 +145,18 @@ function SortableColorCard({
               <>
                 <div className="flex flex-col items-center">
                   <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">HL</span>
-                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center" style={{ backgroundColor: highlight ? highlight.hex : '#f5f5f5' }}>
-                    {!highlight && <span className="text-xs text-stone-400">N/A</span>}
+                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: highlight ? highlight.hex : '#f5f5f5' }}>
+                    {!highlight && <span className="text-[10px] leading-tight text-stone-400">No highlight</span>}
                   </div>
-                  <span className="text-xs font-semibold text-stone-700">{highlight ? highlight.newCode : '-'}</span>
+                  <span className="text-[10px] font-semibold text-stone-700">{highlight ? highlight.newCode : 'No highlight'}</span>
                 </div>
 
                 <div className="flex flex-col items-center border-l pl-2 border-stone-200">
                   <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">SH</span>
-                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center" style={{ backgroundColor: shadow ? shadow.hex : '#222' }}>
-                    {!shadow && <span className="text-xs text-stone-500">N/A</span>}
+                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: shadow ? shadow.hex : '#222' }}>
+                    {!shadow && <span className="text-[10px] leading-tight text-stone-500">No shadow</span>}
                   </div>
-                  <span className="text-xs font-semibold text-stone-700">{shadow ? shadow.newCode : '-'}</span>
+                  <span className="text-[10px] font-semibold text-stone-700">{shadow ? shadow.newCode : 'No shadow'}</span>
                 </div>
               </>
             );
@@ -168,7 +168,7 @@ function SortableColorCard({
 }
 
 export default function Generator() {
-  const [styleMode, setStyleMode] = useState<StyleMode>("Summer");
+  const [styleMode, setStyleMode] = useState<StyleMode>("All");
   const [harmonyMode, setHarmonyMode] = useState<HarmonyMode>("Free");
   const [count, setCount] = useState(5);
   const [palette, setPalette] = useState<PaletteItem[]>([]);
@@ -198,7 +198,7 @@ export default function Generator() {
   // Initial load
   useEffect(() => {
     if (palette.length === 0) {
-      generatePalette("Summer", "Free", 5, []);
+      generatePalette("All", "Free", 5, []);
     }
   }, []);
 
@@ -249,7 +249,7 @@ export default function Generator() {
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-stone-50 text-stone-900 font-sans">
       <header className="shrink-0 h-[48px] w-full bg-cream px-6 border-b border-stone-200 z-10 flex items-center justify-between shadow-sm">
         <h1 className="text-xl sm:text-2xl font-bold font-serif text-stone-800 tracking-tight">CodeColor</h1>
-        <div className="text-xs sm:text-sm font-medium text-stone-500">Marker Palette Generator</div>
+        <div className="text-xs sm:text-sm font-medium text-stone-500">Find your perfect palette</div>
       </header>
 
       <main className="flex-1 overflow-hidden flex flex-col md:flex-row w-full max-w-7xl mx-auto">
