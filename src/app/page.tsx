@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Lock, Unlock, Layers, Plus, Minus, RefreshCw, Copy, GripVertical } from "lucide-react";
+import { Lock, Unlock, Layers, Plus, Minus, RefreshCw, Copy, GripVertical, Heart } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COLORS, type ColorItem } from "@/lib/ohuhu-colors";
 import {
@@ -247,9 +247,22 @@ export default function Generator() {
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-stone-50 text-stone-900 font-sans">
-      <header className="shrink-0 h-[48px] w-full bg-cream px-6 border-b border-stone-200 z-10 flex items-center justify-between shadow-sm">
-        <h1 className="text-xl sm:text-2xl font-bold font-serif text-stone-800 tracking-tight">CodeColor</h1>
-        <div className="text-xs sm:text-sm font-medium text-stone-500">Find your perfect palette</div>
+      <header className="shrink-0 h-[48px] w-full bg-cream px-4 sm:px-6 border-b border-stone-200 z-10 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-stone-800 tracking-tight">CodeColor</h1>
+          <div className="hidden sm:block text-xs sm:text-sm font-medium text-stone-500">Find your perfect palette</div>
+        </div>
+
+        <a
+          href="https://ko-fi.com/sherifhakim"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="I made this free for you — your support means a lot 🙏"
+          className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white/50 hover:bg-rose-50 text-stone-600 hover:text-rose-700 border border-stone-200 hover:border-rose-200 transition-all shadow-sm"
+        >
+          <Heart className="w-3.5 h-3.5 text-rose-500" />
+          <span className="text-[11px] sm:text-xs font-medium whitespace-nowrap">Support me</span>
+        </a>
       </header>
 
       <main className="flex-1 overflow-hidden flex flex-col md:flex-row w-full max-w-7xl mx-auto">
