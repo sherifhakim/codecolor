@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Lock, Unlock, Layers, Plus, Minus, RefreshCw, Copy, GripVertical, Heart } from "lucide-react";
+import { Lock, Unlock, Layers, Plus, Minus, RefreshCw, Copy, GripVertical, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COLORS, type ColorItem } from "@/lib/ohuhu-colors";
 import {
   ZONES,
   type StyleMode,
-  type HarmonyMode,
   getShadowHighlight,
   generatePalette as engineGeneratePalette
 } from "@/lib/palette-engine";
@@ -169,12 +168,11 @@ function SortableColorCard({
 
 export default function Generator() {
   const [styleMode, setStyleMode] = useState<StyleMode>("All");
-  const [harmonyMode, setHarmonyMode] = useState<HarmonyMode>("Free");
   const [count, setCount] = useState(5);
   const [palette, setPalette] = useState<PaletteItem[]>([]);
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
 
-  const generatePalette = useCallback((currentStyle: StyleMode, currentHarmony: HarmonyMode, currentCount: number, currentPalette: PaletteItem[]) => {
+  const generatePalette = useCallback((currentStyle: StyleMode, currentCount: number, currentPalette: PaletteItem[]) => {
     const currentLocks = currentPalette.reduce((acc, item, i) => {
       if (item.locked) acc[i] = true;
       return acc;
@@ -182,7 +180,7 @@ export default function Generator() {
 
     const currentColors = currentPalette.map(item => item.color);
 
-    const newColors = engineGeneratePalette(COLORS, currentStyle, currentHarmony, currentCount, currentLocks, currentColors);
+    const newColors = engineGeneratePalette(COLORS, currentStyle, currentCount, currentLocks, currentColors);
 
     setPalette(newColors.map((color, i) => {
       const isLocked = currentLocks[i] || false;
@@ -198,12 +196,12 @@ export default function Generator() {
   // Initial load
   useEffect(() => {
     if (palette.length === 0) {
-      generatePalette("All", "Free", 5, []);
+      generatePalette("All", 5, []);
     }
   }, []);
 
   const handleGenerate = () => {
-    generatePalette(styleMode, harmonyMode, count, palette);
+    generatePalette(styleMode, count, palette);
   };
 
   const toggleLock = (id: string) => {
@@ -247,22 +245,11 @@ export default function Generator() {
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-stone-50 text-stone-900 font-sans">
-      <header className="shrink-0 h-[48px] w-full bg-cream px-4 sm:px-6 border-b border-stone-200 z-10 flex items-center justify-between shadow-sm">
+      <header className="shrink-0 h-[48px] w-full bg-cream px-4 sm:px-6 border-b border-stone-200 z-10 flex items-center shadow-sm">
         <div className="flex items-center gap-3">
           <h1 className="text-xl sm:text-2xl font-bold font-serif text-stone-800 tracking-tight">CodeColor</h1>
-          <div className="hidden sm:block text-xs sm:text-sm font-medium text-stone-500">Find your perfect palette</div>
+          <div className="text-xs sm:text-sm font-medium text-stone-500">Find your perfect palette</div>
         </div>
-
-        <a
-          href="https://ko-fi.com/sherifhakim"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="I made this free for you — your support means a lot 🙏"
-          className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white/50 hover:bg-rose-50 text-stone-600 hover:text-rose-700 border border-stone-200 hover:border-rose-200 transition-all shadow-sm"
-        >
-          <Heart className="w-3.5 h-3.5 text-rose-500" />
-          <span className="text-[11px] sm:text-xs font-medium whitespace-nowrap">Support me</span>
-        </a>
       </header>
 
       <main className="flex-1 overflow-hidden flex flex-col md:flex-row w-full max-w-7xl mx-auto">
@@ -289,7 +276,7 @@ export default function Generator() {
       <footer className="shrink-0 h-[56px] flex items-center w-full bg-white border-t border-stone-200 px-1.5 sm:px-4 z-10">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3 flex-nowrap">
 
-          <Select value={styleMode} onValueChange={(v: StyleMode) => { setStyleMode(v); generatePalette(v, harmonyMode, count, palette); }}>
+          <Select value={styleMode} onValueChange={(v: StyleMode) => { setStyleMode(v); generatePalette(v, count, palette); }}>
             <SelectTrigger className="flex-1 min-w-[65px] max-w-[120px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1.5 sm:!px-2">
               <SelectValue placeholder="Style" />
             </SelectTrigger>
@@ -300,23 +287,12 @@ export default function Generator() {
             </SelectContent>
           </Select>
 
-          <Select value={harmonyMode} onValueChange={(v: HarmonyMode) => { setHarmonyMode(v); generatePalette(styleMode, v, count, palette); }}>
-            <SelectTrigger className="flex-1 min-w-[65px] max-w-[130px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1.5 sm:!px-2">
-              <SelectValue placeholder="Harmony" />
-            </SelectTrigger>
-            <SelectContent>
-              {["Free", "Analogous", "Complementary", "Triadic", "Split Complementary"].map(h => (
-                <SelectItem key={h} value={h} className="text-xs">{h}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <div className="flex items-center gap-0.5 shrink-0 bg-stone-50 border border-stone-300 rounded-md p-0.5 h-9">
             <button
               onClick={() => {
                 const newCount = Math.max(2, count - 1);
                 setCount(newCount);
-                generatePalette(styleMode, harmonyMode, newCount, palette);
+                generatePalette(styleMode, newCount, palette);
               }}
               className="w-[24px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50"
               disabled={count <= 2}
@@ -328,7 +304,7 @@ export default function Generator() {
               onClick={() => {
                 const newCount = Math.min(7, count + 1);
                 setCount(newCount);
-                generatePalette(styleMode, harmonyMode, newCount, palette);
+                generatePalette(styleMode, newCount, palette);
               }}
               className="w-[24px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50"
               disabled={count >= 7}
@@ -341,7 +317,7 @@ export default function Generator() {
             onClick={handleGenerate}
             className="shrink-0 flex items-center justify-center gap-1 sm:gap-1.5 bg-stone-900 hover:bg-stone-800 text-white px-2.5 sm:px-4 h-9 rounded-full font-medium transition-colors shadow-sm"
           >
-            <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
             <span className="text-[11px] sm:text-xs shrink-0 font-medium whitespace-nowrap">Generate</span>
           </button>
         </div>

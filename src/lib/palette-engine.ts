@@ -9,7 +9,12 @@ export const ZONES = {
   Warm: (c: ColorItem) => ["Y", "YR", "R", "RV", "E", "YGY", "WG"].includes(c.family),
   Cold: (c: ColorItem) => ["B", "BV", "BG", "CG", "BGY"].includes(c.family),
   Neon: (c: ColorItem) => c.family === "FY" || (["RV", "R", "Y", "YR", "G", "BG"].includes(c.family) && c.s > 65),
-  Vintage: (c: ColorItem) => ["E", "V", "BV", "YGY"].includes(c.family) && c.s >= 20 && c.s <= 50,
+  Vintage: (c: ColorItem) => {
+    const families = ["E", "YR", "Y", "YGY", "WG", "BG", "BGY", "R", "G", "YG", "BV", "V"];
+    if (!families.includes(c.family)) return false;
+    if (c.family === "YGY" || c.family === "BGY") return c.s >= 5;
+    return c.s >= 20 && c.s <= 50;
+  },
   Summer: (c: ColorItem) => ["Y", "YR", "R", "RV", "BG", "G", "YG", "E"].includes(c.family) && c.l >= 50,
   Winter: (c: ColorItem) => {
     if (c.family === "RV") return c.l > 70;
@@ -19,7 +24,8 @@ export const ZONES = {
   Autumn: (c: ColorItem) => ["YR", "R", "E", "Y", "YG"].includes(c.family) && c.l >= 30 && c.l <= 70,
 } as const;
 
-export type HarmonyMode = "Free" | "Analogous" | "Complementary" | "Triadic" | "Split Complementary";
+const HARMONY_MODES = ["Analogous", "Complementary", "Triadic", "Split Complementary"] as const;
+type HarmonyMode = typeof HARMONY_MODES[number];
 export type StyleMode = keyof typeof ZONES;
 
 export const WHEEL = ["Y", "YR", "R", "RV", "V", "BV", "B", "BG", "G", "YG"];
@@ -65,11 +71,12 @@ export function getShadowHighlight(color: ColorItem, dataset: ColorItem[]) {
 export function generatePalette(
   dataset: ColorItem[],
   currentStyle: StyleMode,
-  currentHarmony: HarmonyMode,
   currentCount: number,
   currentLocks: Record<number, boolean>,
   currentColors: ColorItem[]
 ): ColorItem[] {
+  // Randomly pick a harmony method on each generation
+  const currentHarmony: HarmonyMode = HARMONY_MODES[Math.floor(Math.random() * HARMONY_MODES.length)];
   // 1. Filter by Style Zone
   const zoneFilter = ZONES[currentStyle];
   let pool = dataset.filter(zoneFilter);
@@ -79,7 +86,7 @@ export function generatePalette(
   const newColors: ColorItem[] = [...currentColors];
   newColors.length = currentCount;
 
-  // Pick base hue if not free harmony
+  // Pick base hue if not Random harmony
   let baseFamilyIdx = Math.floor(Math.random() * WHEEL.length);
   if (allowedChromatic.length > 0) {
     baseFamilyIdx = WHEEL.indexOf(allowedChromatic[Math.floor(Math.random() * allowedChromatic.length)]);
@@ -96,7 +103,7 @@ export function generatePalette(
     }
 
     let targetFamilies: string[] | null = null;
-    if (currentHarmony !== "Free" && allowedChromatic.length > 0) {
+    if (allowedChromatic.length > 0) {
       let targetIdx = baseFamilyIdx;
       const len = WHEEL.length;
       if (currentHarmony === "Analogous") {
@@ -127,7 +134,11 @@ export function generatePalette(
 
     const choice = options[Math.floor(Math.random() * options.length)];
     newColors[i] = choice;
-    usedFamilies.add(choice.family);
+    // Allow repeated picks from repeatable families (e.g. YGY, BGY in Vintage)
+    const repeatableFamilies = ["YGY", "BGY"];
+    if (!repeatableFamilies.includes(choice.family)) {
+      usedFamilies.add(choice.family);
+    }
 
     // Remove chosen from pool to avoid exact dupes
     const poolIdx = availablePool.findIndex(c => c.newCode === choice.newCode);
