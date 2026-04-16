@@ -53,12 +53,14 @@ function SortableColorCard({
   item,
   onToggleLock,
   isActivePopover,
-  setActivePopoverId
+  setActivePopoverId,
+  useOldCode
 }: {
   item: PaletteItem;
   onToggleLock: () => void;
   isActivePopover: boolean;
   setActivePopoverId: () => void;
+  useOldCode: boolean;
 }) {
   const {
     attributes,
@@ -126,9 +128,11 @@ function SortableColorCard({
       <div className={`my-auto md:mt-auto md:mb-0 p-2 pl-3 sm:p-3 flex flex-col w-full z-0 ${textColor}`}>
         <div className="flex flex-col text-left">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-0 text-shadow-sm truncate">
-            {item.color.newCode}
+            {useOldCode && item.color.oldCode ? item.color.oldCode : item.color.newCode}
           </h2>
-          <p className="text-xs sm:text-sm lg:text-base font-medium opacity-90 truncate leading-tight">{item.color.newName}</p>
+          <p className="text-xs sm:text-sm lg:text-base font-medium opacity-90 truncate leading-tight">
+            {useOldCode && item.color.oldCode ? item.color.oldName || item.color.newName : item.color.newName}
+          </p>
         </div>
       </div>
 
@@ -147,7 +151,7 @@ function SortableColorCard({
                   <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: highlight ? highlight.hex : '#f5f5f5' }}>
                     {!highlight && <span className="text-[10px] leading-tight text-stone-400">No highlight</span>}
                   </div>
-                  <span className="text-[10px] font-semibold text-stone-700">{highlight ? highlight.newCode : 'No highlight'}</span>
+                  <span className="text-[10px] font-semibold text-stone-700">{highlight ? (useOldCode && highlight.oldCode ? highlight.oldCode : highlight.newCode) : 'No highlight'}</span>
                 </div>
 
                 <div className="flex flex-col items-center border-l pl-2 border-stone-200">
@@ -155,7 +159,7 @@ function SortableColorCard({
                   <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: shadow ? shadow.hex : '#222' }}>
                     {!shadow && <span className="text-[10px] leading-tight text-stone-500">No shadow</span>}
                   </div>
-                  <span className="text-[10px] font-semibold text-stone-700">{shadow ? shadow.newCode : 'No shadow'}</span>
+                  <span className="text-[10px] font-semibold text-stone-700">{shadow ? (useOldCode && shadow.oldCode ? shadow.oldCode : shadow.newCode) : 'No shadow'}</span>
                 </div>
               </>
             );
@@ -171,6 +175,8 @@ export default function Generator() {
   const [count, setCount] = useState(5);
   const [palette, setPalette] = useState<PaletteItem[]>([]);
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
+  const [markerBrand, setMarkerBrand] = useState("Ohuhu");
+  const [useOldCode, setUseOldCode] = useState(false);
 
   const generatePalette = useCallback((currentStyle: StyleMode, currentCount: number, currentPalette: PaletteItem[]) => {
     const currentLocks = currentPalette.reduce((acc, item, i) => {
@@ -267,59 +273,92 @@ export default function Generator() {
                 onToggleLock={() => toggleLock(item.id)}
                 isActivePopover={activePopoverId === item.id}
                 setActivePopoverId={() => setActivePopoverId(activePopoverId === item.id ? null : item.id)}
+                useOldCode={useOldCode}
               />
             ))}
           </SortableContext>
         </DndContext>
       </main>
 
-      <footer className="shrink-0 h-[56px] flex items-center w-full bg-white border-t border-stone-200 px-1.5 sm:px-4 z-10">
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-3 flex-nowrap">
+      <footer className="shrink-0 h-[56px] flex items-center w-full bg-white border-t border-stone-200 px-1 sm:px-4 z-10 overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-1 sm:gap-3 flex-nowrap min-w-0">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <Select value={markerBrand} onValueChange={setMarkerBrand}>
+              <SelectTrigger className="w-[55px] sm:w-[100px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1 sm:!px-2 truncate shrink pointer-events-auto">
+                <SelectValue placeholder="Brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Ohuhu" className="text-xs">Ohuhu</SelectItem>
+                <SelectItem value="Decotime" disabled className="text-xs">Decotime (Soon)</SelectItem>
+                <SelectItem value="Chen Rui" disabled className="text-xs">Chen Rui (Soon)</SelectItem>
+                <SelectItem value="Arrtx" disabled className="text-xs">Arrtx (Soon)</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={styleMode} onValueChange={(v: StyleMode) => { setStyleMode(v); generatePalette(v, count, palette); }}>
-            <SelectTrigger className="flex-1 min-w-[65px] max-w-[120px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1.5 sm:!px-2">
-              <SelectValue placeholder="Style" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.keys(ZONES).map(z => (
-                <SelectItem key={z} value={z} className="text-xs">{z}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="flex items-center gap-0.5 shrink-0 bg-stone-50 border border-stone-300 rounded-md p-0.5 h-9">
-            <button
-              onClick={() => {
-                const newCount = Math.max(2, count - 1);
-                setCount(newCount);
-                generatePalette(styleMode, newCount, palette);
-              }}
-              className="w-[24px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50"
-              disabled={count <= 2}
-            >
-              <Minus className="w-3 h-3" />
-            </button>
-            <div className="w-3 sm:w-4 text-center text-[11px] sm:text-xs font-semibold">{count}</div>
-            <button
-              onClick={() => {
-                const newCount = Math.min(7, count + 1);
-                setCount(newCount);
-                generatePalette(styleMode, newCount, palette);
-              }}
-              className="w-[24px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50"
-              disabled={count >= 7}
-            >
-              <Plus className="w-3 h-3" />
-            </button>
+            {markerBrand === "Ohuhu" && (
+              <div className="flex bg-stone-100 p-0.5 rounded-md border border-stone-300 items-center h-9 shrink-0">
+                <button
+                  onClick={() => setUseOldCode(false)}
+                  className={`px-1.5 sm:px-2 h-full text-[10px] sm:text-xs font-medium rounded-[4px] transition-colors flex items-center ${!useOldCode ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+                >
+                  New
+                </button>
+                <button
+                  onClick={() => setUseOldCode(true)}
+                  className={`px-1.5 sm:px-2 h-full text-[10px] sm:text-xs font-medium rounded-[4px] transition-colors flex items-center ${useOldCode ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+                >
+                  Old
+                </button>
+              </div>
+            )}
           </div>
 
-          <button
-            onClick={handleGenerate}
-            className="shrink-0 flex items-center justify-center gap-1 sm:gap-1.5 bg-stone-900 hover:bg-stone-800 text-white px-2.5 sm:px-4 h-9 rounded-full font-medium transition-colors shadow-sm"
-          >
-            <Sparkles className="w-3.5 h-3.5 shrink-0" />
-            <span className="text-[11px] sm:text-xs shrink-0 font-medium whitespace-nowrap">Generate</span>
-          </button>
+          <div className="flex items-center gap-1 sm:gap-3 min-w-0 shrink-0">
+            <Select value={styleMode} onValueChange={(v: StyleMode) => { setStyleMode(v); generatePalette(v, count, palette); }}>
+              <SelectTrigger className="w-[55px] sm:w-[100px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1 sm:!px-2 truncate shrink pointer-events-auto">
+                <SelectValue placeholder="Style" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(ZONES).map(z => (
+                  <SelectItem key={z} value={z} className="text-xs">{z}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-0.5 bg-stone-50 border border-stone-300 rounded-md p-0.5 h-9 shrink-0">
+              <button
+                onClick={() => {
+                  const newCount = Math.max(2, count - 1);
+                  setCount(newCount);
+                  generatePalette(styleMode, newCount, palette);
+                }}
+                className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
+                disabled={count <= 2}
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <div className="w-3 sm:w-4 text-center text-[10px] sm:text-xs font-semibold shrink-0">{count}</div>
+              <button
+                onClick={() => {
+                  const newCount = Math.min(7, count + 1);
+                  setCount(newCount);
+                  generatePalette(styleMode, newCount, palette);
+                }}
+                className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
+                disabled={count >= 7}
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+
+            <button
+              onClick={handleGenerate}
+              className="flex items-center justify-center gap-0.5 sm:gap-1.5 bg-stone-900 hover:bg-stone-800 text-white px-1.5 sm:px-4 h-9 rounded-full font-medium transition-colors shadow-sm shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-[10px] sm:text-xs shrink-0 font-medium whitespace-nowrap">Generate</span>
+            </button>
+          </div>
         </div>
       </footer>
     </div>
