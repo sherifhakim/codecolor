@@ -2,26 +2,32 @@ import type { ColorItem } from "./ohuhu-colors";
 
 export const CHROMATIC_FAMILIES = ["Y", "YR", "R", "RV", "V", "BV", "B", "BG", "G", "YG"];
 
+const PASTEL_CODES = new Set([
+  // Sweetness
+  "Y02", "Y14", "Y45", "Y55", "Y62", "Y69", "YR06", "YR11", "YR43", "YR52", "YR55", "YR59", "E05", "E14", "E26", "E46", "E85", "E92", "R15", "R22", "R27", "R54", "RV04", "RV05", "RV25", "RV33", "RV34", "V14", "V22", "BV05", "BV32", "BV35", "B03", "B05", "B21", "B28", "BG24", "BG310", "G34", "G47", "CG01", "CG24", "BGY00", "YGY02", "YGY13", "WG01", "WG04", "GG24",
+  // Blossoming
+  "Y00", "Y03", "Y06", "Y07", "Y26", "Y42", "YR00", "YR03", "YR05", "YR07", "YR33", "YR45", "YR47", "YR56", "YR57", "YR58", "E22", "R25", "R50", "RV01", "RV23", "RV35", "V32", "V34", "V38", "BV26", "BV31", "BV38", "B02", "B06", "B310", "BG04", "BG09", "BG21", "G24", "G36", "G41", "G43", "G49", "YG06", "YG07", "YG66", "CG02", "BGY02", "YGY11", "WG10", "GG03", "GG10"
+]);
+
 export const ZONES = {
   All: () => true,
-  Pastel: (c: ColorItem) => CHROMATIC_FAMILIES.includes(c.family) && c.l > 75,
   Dark: (c: ColorItem) => CHROMATIC_FAMILIES.includes(c.family) && c.l < 35,
   Warm: (c: ColorItem) => ["Y", "YR", "R", "RV", "E", "YGY", "WG"].includes(c.family),
   Cold: (c: ColorItem) => ["B", "BV", "BG", "CG", "BGY"].includes(c.family),
-  Neon: (c: ColorItem) => c.family === "FY" || (["RV", "R", "Y", "YR", "G", "BG"].includes(c.family) && c.s > 65),
   Vintage: (c: ColorItem) => {
     const families = ["E", "YR", "Y", "YGY", "WG", "BG", "BGY", "R", "G", "YG", "BV", "V"];
     if (!families.includes(c.family)) return false;
     if (c.family === "YGY" || c.family === "BGY") return c.s >= 5;
     return c.s >= 20 && c.s <= 50;
   },
+  Neon: (c: ColorItem) =>
+    c.family === "FY" ||
+    (["RV", "R", "Y", "YR", "G", "BG"].includes(c.family) && c.s > 70),
   Summer: (c: ColorItem) => ["Y", "YR", "R", "RV", "BG", "G", "YG", "E"].includes(c.family) && c.l >= 50,
-  Winter: (c: ColorItem) => {
-    if (c.family === "RV") return c.l > 70;
-    return ["B", "BV", "BG", "V", "CG", "BGY", "GG"].includes(c.family) && (c.s < 40 || c.l > 70);
-  },
   Spring: (c: ColorItem) => ["RV", "G", "YG", "Y"].includes(c.family) && c.l > 70,
   Autumn: (c: ColorItem) => ["YR", "R", "E", "Y", "YG"].includes(c.family) && c.l >= 30 && c.l <= 70,
+  Winter: (c: ColorItem) => ["B", "BV", "BG", "V", "CG", "WG"].includes(c.family),
+  Pastel: (c: ColorItem) => PASTEL_CODES.has(c.newCode),
 } as const;
 
 const HARMONY_MODES = ["Analogous", "Complementary", "Triadic", "Split Complementary"] as const;

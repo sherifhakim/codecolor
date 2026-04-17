@@ -4,12 +4,19 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Lock, Unlock, Layers, Plus, Minus, RefreshCw, Copy, GripVertical, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COLORS, type ColorItem } from "@/lib/ohuhu-colors";
+import { DECOTIME_COLORS, type DecotimeColor } from "@/lib/decotime-colors";
 import {
   ZONES,
   type StyleMode,
-  getShadowHighlight,
+  getShadowHighlight as getOhuhuShadowHighlight,
   generatePalette as engineGeneratePalette
 } from "@/lib/palette-engine";
+import {
+  generateDecoPalette,
+  getDecoShadowHighlight,
+  DECO_ZONES,
+  type DecoStyleMode
+} from "@/lib/decotime-engine";
 
 import {
   DndContext,
@@ -43,7 +50,7 @@ function getLuminance(hex: string) {
 
 type PaletteItem = {
   id: string;
-  color: ColorItem;
+  color: any;
   locked: boolean;
 };
 
@@ -54,13 +61,15 @@ function SortableColorCard({
   onToggleLock,
   isActivePopover,
   setActivePopoverId,
-  useOldCode
+  useOldCode,
+  isOhuhu
 }: {
   item: PaletteItem;
   onToggleLock: () => void;
   isActivePopover: boolean;
   setActivePopoverId: () => void;
   useOldCode: boolean;
+  isOhuhu: boolean;
 }) {
   const {
     attributes,
@@ -84,6 +93,13 @@ function SortableColorCard({
   const lum = getLuminance(item.color.hex);
   const textColor = lum > 0.5 ? "text-stone-900" : "text-white";
   const gripColor = lum > 0.5 ? "text-black/40" : "text-white/40";
+
+  const displayCode = isOhuhu
+    ? (useOldCode && item.color.oldCode ? item.color.oldCode : item.color.newCode)
+    : item.color.code;
+  const displayName = isOhuhu
+    ? (useOldCode && item.color.oldCode ? item.color.oldName || item.color.newName : item.color.newName)
+    : "";
 
   return (
     <div
@@ -128,11 +144,13 @@ function SortableColorCard({
       <div className={`my-auto md:mt-auto md:mb-0 p-2 pl-3 sm:p-3 flex flex-col w-full z-0 ${textColor}`}>
         <div className="flex flex-col text-left">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-0 text-shadow-sm truncate">
-            {useOldCode && item.color.oldCode ? item.color.oldCode : item.color.newCode}
+            {displayCode}
           </h2>
-          <p className="text-xs sm:text-sm lg:text-base font-medium opacity-90 truncate leading-tight">
-            {useOldCode && item.color.oldCode ? item.color.oldName || item.color.newName : item.color.newName}
-          </p>
+          {displayName && (
+            <p className="text-xs sm:text-sm lg:text-base font-medium opacity-90 truncate leading-tight mt-0.5">
+              {displayName}
+            </p>
+          )}
         </div>
       </div>
 
@@ -143,23 +161,39 @@ function SortableColorCard({
         >
           <button className="absolute -top-2 -right-2 bg-stone-200 text-stone-600 rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm hover:bg-stone-300" onClick={setActivePopoverId}>×</button>
           {(() => {
-            const { highlight, shadow } = getShadowHighlight(item.color, COLORS);
+            let highlight: any, shadow: any;
+            if (isOhuhu) {
+              const res = getOhuhuShadowHighlight(item.color, COLORS);
+              highlight = res.highlight;
+              shadow = res.shadow;
+            } else {
+              const res = getDecoShadowHighlight(item.color, DECOTIME_COLORS);
+              highlight = res.highlight;
+              shadow = res.shadow;
+            }
+
+            const hHex = highlight?.hex || '#f5f5f5';
+            const sHex = shadow?.hex || '#222';
+
+            const hText = !highlight ? 'No highlight' : (isOhuhu ? (useOldCode && highlight.oldCode ? highlight.oldCode : highlight.newCode) : highlight.code);
+            const sText = !shadow ? 'No shadow' : (isOhuhu ? (useOldCode && shadow.oldCode ? shadow.oldCode : shadow.newCode) : shadow.code);
+
             return (
               <>
                 <div className="flex flex-col items-center">
                   <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">HL</span>
-                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: highlight ? highlight.hex : '#f5f5f5' }}>
+                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: hHex }}>
                     {!highlight && <span className="text-[10px] leading-tight text-stone-400">No highlight</span>}
                   </div>
-                  <span className="text-[10px] font-semibold text-stone-700">{highlight ? (useOldCode && highlight.oldCode ? highlight.oldCode : highlight.newCode) : 'No highlight'}</span>
+                  <span className="text-[10px] font-semibold text-stone-700">{hText}</span>
                 </div>
 
                 <div className="flex flex-col items-center border-l pl-2 border-stone-200">
                   <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">SH</span>
-                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: shadow ? shadow.hex : '#222' }}>
+                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: sHex }}>
                     {!shadow && <span className="text-[10px] leading-tight text-stone-500">No shadow</span>}
                   </div>
-                  <span className="text-[10px] font-semibold text-stone-700">{shadow ? (useOldCode && shadow.oldCode ? shadow.oldCode : shadow.newCode) : 'No shadow'}</span>
+                  <span className="text-[10px] font-semibold text-stone-700">{sText}</span>
                 </div>
               </>
             );
@@ -171,22 +205,36 @@ function SortableColorCard({
 }
 
 export default function Generator() {
-  const [styleMode, setStyleMode] = useState<StyleMode>("All");
+  const [markerBrand, setMarkerBrand] = useState("Ohuhu");
+  const [styleMode, setStyleMode] = useState<string>("All");
   const [count, setCount] = useState(5);
   const [palette, setPalette] = useState<PaletteItem[]>([]);
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
-  const [markerBrand, setMarkerBrand] = useState("Ohuhu");
   const [useOldCode, setUseOldCode] = useState(false);
 
-  const generatePalette = useCallback((currentStyle: StyleMode, currentCount: number, currentPalette: PaletteItem[]) => {
+  const generatePalette = useCallback((currentStyle: string, currentCount: number, currentPalette: PaletteItem[], brand: string) => {
+    const isOhuhu = brand === "Ohuhu";
+
     const currentLocks = currentPalette.reduce((acc, item, i) => {
-      if (item.locked) acc[i] = true;
+      if (item.locked && ((isOhuhu && 'family' in item.color) || (!isOhuhu && !('family' in item.color)))) {
+        acc[i] = true;
+      }
       return acc;
     }, {} as Record<number, boolean>);
 
-    const currentColors = currentPalette.map(item => item.color);
+    const currentColors = currentPalette.map(item => {
+      if ((isOhuhu && 'family' in item.color) || (!isOhuhu && !('family' in item.color))) {
+        return item.color;
+      }
+      return undefined;
+    });
 
-    const newColors = engineGeneratePalette(COLORS, currentStyle, currentCount, currentLocks, currentColors);
+    let newColors: any[] = [];
+    if (isOhuhu) {
+      newColors = engineGeneratePalette(COLORS, currentStyle as StyleMode, currentCount, currentLocks, currentColors as ColorItem[]);
+    } else {
+      newColors = generateDecoPalette(DECOTIME_COLORS, currentStyle as DecoStyleMode, currentCount, currentLocks, currentColors as DecotimeColor[]);
+    }
 
     setPalette(newColors.map((color, i) => {
       const isLocked = currentLocks[i] || false;
@@ -199,15 +247,14 @@ export default function Generator() {
     }));
   }, []);
 
-  // Initial load
   useEffect(() => {
-    if (palette.length === 0) {
-      generatePalette("All", 5, []);
-    }
-  }, []);
+    setStyleMode("All");
+    generatePalette("All", count, [], markerBrand);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markerBrand]);
 
   const handleGenerate = () => {
-    generatePalette(styleMode, count, palette);
+    generatePalette(styleMode, count, palette, markerBrand);
   };
 
   const toggleLock = (id: string) => {
@@ -216,15 +263,10 @@ export default function Generator() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
+      activationConstraint: { distance: 5 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 150,
-        tolerance: 5,
-      },
+      activationConstraint: { delay: 150, tolerance: 5 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -237,7 +279,6 @@ export default function Generator() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
       setPalette((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
@@ -248,6 +289,7 @@ export default function Generator() {
   };
 
   const paletteIds = palette.map(item => item.id);
+  const activeZones = markerBrand === "Ohuhu" ? ZONES : DECO_ZONES;
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-stone-50 text-stone-900 font-sans">
@@ -274,6 +316,7 @@ export default function Generator() {
                 isActivePopover={activePopoverId === item.id}
                 setActivePopoverId={() => setActivePopoverId(activePopoverId === item.id ? null : item.id)}
                 useOldCode={useOldCode}
+                isOhuhu={markerBrand === "Ohuhu"}
               />
             ))}
           </SortableContext>
@@ -289,7 +332,7 @@ export default function Generator() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Ohuhu" className="text-xs">Ohuhu</SelectItem>
-                <SelectItem value="Decotime" disabled className="text-xs">Decotime (Soon)</SelectItem>
+                <SelectItem value="Decotime" className="text-xs">Decotime</SelectItem>
                 <SelectItem value="Chen Rui" disabled className="text-xs">Chen Rui (Soon)</SelectItem>
                 <SelectItem value="Arrtx" disabled className="text-xs">Arrtx (Soon)</SelectItem>
               </SelectContent>
@@ -314,14 +357,21 @@ export default function Generator() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3 min-w-0 shrink-0">
-            <Select value={styleMode} onValueChange={(v: StyleMode) => { setStyleMode(v); generatePalette(v, count, palette); }}>
+            <Select value={styleMode} onValueChange={(v: string) => { setStyleMode(v); generatePalette(v, count, palette, markerBrand); }}>
               <SelectTrigger className="w-[55px] sm:w-[100px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1 sm:!px-2 truncate shrink pointer-events-auto">
                 <SelectValue placeholder="Style" />
               </SelectTrigger>
               <SelectContent>
-                {Object.keys(ZONES).map(z => (
-                  <SelectItem key={z} value={z} className="text-xs">{z}</SelectItem>
-                ))}
+                {(() => {
+                  const keys = Object.keys(activeZones);
+                  const sorted = [];
+                  if (keys.includes('All')) sorted.push('All');
+                  if (keys.includes('Pastel')) sorted.push('Pastel');
+                  sorted.push(...keys.filter(k => k !== 'All' && k !== 'Pastel'));
+                  return sorted.map(z => (
+                    <SelectItem key={z} value={z} className="text-xs">{z}</SelectItem>
+                  ));
+                })()}
               </SelectContent>
             </Select>
 
@@ -330,7 +380,7 @@ export default function Generator() {
                 onClick={() => {
                   const newCount = Math.max(2, count - 1);
                   setCount(newCount);
-                  generatePalette(styleMode, newCount, palette);
+                  generatePalette(styleMode, newCount, palette, markerBrand);
                 }}
                 className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
                 disabled={count <= 2}
@@ -342,7 +392,7 @@ export default function Generator() {
                 onClick={() => {
                   const newCount = Math.min(7, count + 1);
                   setCount(newCount);
-                  generatePalette(styleMode, newCount, palette);
+                  generatePalette(styleMode, newCount, palette, markerBrand);
                 }}
                 className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
                 disabled={count >= 7}

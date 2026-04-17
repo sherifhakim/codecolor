@@ -355,28 +355,161 @@ export const OHUHU_COLORS = [
   { oldCode: "Y070", oldName: "Acid Yellow", newCode: "Y19", newName: "Canary", hex: "#f2d848" },
   { oldCode: "Y080", oldName: "Lightning Yellow", newCode: "Y17", newName: "Bright Lemon Yellow", hex: "#efed72" },
   { oldCode: "0", oldName: "Colorless Blender", newCode: "0", newName: "Colorless Blender", hex: "#ffffff" },
-  { oldCode: "YR209", oldName: "", newCode: "E47", newName: "", hex: "#c5977b" },
-  { oldCode: "Y145", oldName: "", newCode: "E49", newName: "", hex: "#af7b63" },
-  { oldCode: "YR9", oldName: "", newCode: "E59", newName: "", hex: "#865047" },
-  { oldCode: "YR148", oldName: "", newCode: "E66", newName: "", hex: "#a07069" },
-  { oldCode: "R26", oldName: "", newCode: "E75", newName: "", hex: "#b07a7c" },
-  { oldCode: "R30", oldName: "", newCode: "E81", newName: "", hex: "#c99fb3" },
-  { oldCode: "YG100", oldName: "", newCode: "E111", newName: "", hex: "#bdad96" },
-  { oldCode: "YR95", oldName: "", newCode: "E513", newName: "", hex: "#46353d" },
-  { oldCode: "YR92", oldName: "", newCode: "E514", newName: "", hex: "#32252e" },
-  { oldCode: "YR10", oldName: "", newCode: "E612", newName: "", hex: "#6b3533" },
-  { oldCode: "YR91", oldName: "", newCode: "E615", newName: "", hex: "#472a2a" },
-  { oldCode: "R27", oldName: "", newCode: "E711", newName: "", hex: "#916062" },
-  { oldCode: "R28", oldName: "", newCode: "E814", newName: "", hex: "#765b69" },
-  { oldCode: "WG0.5", oldName: "", newCode: "YR02", newName: "", hex: "#cdbdc2" },
-  { oldCode: "YR7", oldName: "", newCode: "YR09", newName: "", hex: "#e07c45" },
-  { oldCode: "YR205", oldName: "", newCode: "YR25", newName: "", hex: "#e1956a" },
-  { oldCode: "YR8", oldName: "", newCode: "YR29", newName: "", hex: "#d76c3b" },
-  { oldCode: "YR20", oldName: "", newCode: "YR37", newName: "", hex: "#d18360" },
-  { oldCode: "YR107", oldName: "", newCode: "YR38", newName: "", hex: "#d77e4f" },
-  { oldCode: "YR212", oldName: "", newCode: "Y43", newName: "", hex: "#dac4bd" },
-  { oldCode: "YR6", oldName: "", newCode: "Y48", newName: "", hex: "#d7a554" },
-  { oldCode: "YR34", oldName: "", newCode: "Y210", newName: "", hex: "#b97317" }
+  {
+    oldCode: "YR209",
+    oldName: "",
+    newCode: "E47",
+    newName: "",
+    hex: "#c5977b"
+  },
+  {
+    oldCode: "Y145",
+    oldName: "",
+    newCode: "E49",
+    newName: "",
+    hex: "#af7b63"
+  },
+  {
+    oldCode: "YR9",
+    oldName: "",
+    newCode: "E59",
+    newName: "",
+    hex: "#865047"
+  },
+  {
+    oldCode: "YR148",
+    oldName: "",
+    newCode: "E66",
+    newName: "",
+    hex: "#a07069"
+  },
+  {
+    oldCode: "R26",
+    oldName: "",
+    newCode: "E75",
+    newName: "",
+    hex: "#b07a7c"
+  },
+  {
+    oldCode: "R30",
+    oldName: "",
+    newCode: "E81",
+    newName: "",
+    hex: "#c99fb3"
+  },
+  {
+    oldCode: "YG100",
+    oldName: "",
+    newCode: "E111",
+    newName: "",
+    hex: "#bdad96"
+  },
+  {
+    oldCode: "YR95",
+    oldName: "",
+    newCode: "E513",
+    newName: "",
+    hex: "#46353d"
+  },
+  {
+    oldCode: "YR92",
+    oldName: "",
+    newCode: "E514",
+    newName: "",
+    hex: "#32252e"
+  },
+  {
+    oldCode: "YR10",
+    oldName: "",
+    newCode: "E612",
+    newName: "",
+    hex: "#6b3533"
+  },
+  {
+    oldCode: "YR91",
+    oldName: "",
+    newCode: "E615",
+    newName: "",
+    hex: "#472a2a"
+  },
+  {
+    oldCode: "R27",
+    oldName: "",
+    newCode: "E711",
+    newName: "",
+    hex: "#916062"
+  },
+  {
+    oldCode: "R28",
+    oldName: "",
+    newCode: "E814",
+    newName: "",
+    hex: "#765b69"
+  },
+  {
+    oldCode: "WG0.5",
+    oldName: "",
+    newCode: "YR02",
+    newName: "",
+    hex: "#cdbdc2"
+  },
+  {
+    oldCode: "YR7",
+    oldName: "",
+    newCode: "YR09",
+    newName: "",
+    hex: "#e07c45"
+  },
+  {
+    oldCode: "YR205",
+    oldName: "",
+    newCode: "YR25",
+    newName: "",
+    hex: "#e1956a"
+  },
+  {
+    oldCode: "YR8",
+    oldName: "",
+    newCode: "YR29",
+    newName: "",
+    hex: "#d76c3b"
+  },
+  {
+    oldCode: "YR20",
+    oldName: "",
+    newCode: "YR37",
+    newName: "",
+    hex: "#d18360"
+  },
+  {
+    oldCode: "YR107",
+    oldName: "",
+    newCode: "YR38",
+    newName: "",
+    hex: "#d77e4f"
+  },
+  {
+    oldCode: "YR212",
+    oldName: "",
+    newCode: "Y43",
+    newName: "",
+    hex: "#dac4bd"
+  },
+  {
+    oldCode: "YR6",
+    oldName: "",
+    newCode: "Y48",
+    newName: "",
+    hex: "#d7a554"
+  },
+  {
+    oldCode: "YR34",
+    oldName: "",
+    newCode: "Y210",
+    newName: "",
+    hex: "#b97317"
+  }
+
 ];
 
 export type ColorItem = {
