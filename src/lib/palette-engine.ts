@@ -9,6 +9,12 @@ const PASTEL_CODES = new Set([
   "Y00", "Y03", "Y06", "Y07", "Y26", "Y42", "YR00", "YR03", "YR05", "YR07", "YR33", "YR45", "YR47", "YR56", "YR57", "YR58", "E22", "R25", "R50", "RV01", "RV23", "RV35", "V32", "V34", "V38", "BV26", "BV31", "BV38", "B02", "B06", "B310", "BG04", "BG09", "BG21", "G24", "G36", "G41", "G43", "G49", "YG06", "YG07", "YG66", "CG02", "BGY02", "YGY11", "WG10", "GG03", "GG10"
 ]);
 
+const SUMMER_CODES = new Set([
+  "YR57", "V18", "E22", "Y00", "Y09", "Y17", "RV35", "BG212",
+  "RV39", "Y02", "YG160", "YG112", "Y14", "YR55", "G013", "V112",
+  "YR511", "RV111", "E46", "BG311"
+]);
+
 const NEON_CODES = new Set([
   "B08", "FY01", "FY02", "RV08", "RV111", "Y111", "Y19", "Y28",
   "YR111", "YR112", "YR19", "YR513", "Y17", "RV310", "BG212",
@@ -26,7 +32,7 @@ export const ZONES = {
     if (c.family === "YGY" || c.family === "BGY") return c.s >= 5;
     return c.s >= 20 && c.s <= 50;
   },
-  Summer: (c: ColorItem) => ["Y", "YR", "R", "RV", "BG", "G", "YG", "E"].includes(c.family) && c.l >= 50,
+  Summer: (c: ColorItem) => SUMMER_CODES.has(c.newCode),
   Spring: (c: ColorItem) => ["RV", "G", "YG", "Y"].includes(c.family) && c.l > 70,
   Autumn: (c: ColorItem) => ["YR", "R", "E", "Y", "YG"].includes(c.family) && c.l >= 30 && c.l <= 70,
   Winter: (c: ColorItem) => ["B", "BV", "BG", "V", "CG", "WG"].includes(c.family),

@@ -1,22 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Lock, Unlock, Layers, Plus, Minus, RefreshCw, Copy, GripVertical, Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Lock, Unlock, Layers, Plus, Minus, Copy, GripVertical, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { COLORS, type ColorItem } from "@/lib/ohuhu-colors";
-import { DECOTIME_COLORS, type DecotimeColor } from "@/lib/decotime-colors";
-import {
+import { COLORS, type ColorItem } from "@/lib/ohuhu-colors"; import {
   ZONES,
   type StyleMode,
   getShadowHighlight as getOhuhuShadowHighlight,
   generatePalette as engineGeneratePalette
 } from "@/lib/palette-engine";
-import {
-  generateDecoPalette,
-  getDecoShadowHighlight,
-  DECO_ZONES,
-  type DecoStyleMode
-} from "@/lib/decotime-engine";
+
 
 import {
   DndContext,
@@ -161,22 +154,15 @@ function SortableColorCard({
         >
           <button className="absolute -top-2 -right-2 bg-stone-200 text-stone-600 rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-sm hover:bg-stone-300" onClick={setActivePopoverId}>×</button>
           {(() => {
-            let highlight: any, shadow: any;
-            if (isOhuhu) {
-              const res = getOhuhuShadowHighlight(item.color, COLORS);
-              highlight = res.highlight;
-              shadow = res.shadow;
-            } else {
-              const res = getDecoShadowHighlight(item.color, DECOTIME_COLORS);
-              highlight = res.highlight;
-              shadow = res.shadow;
-            }
+            const res = getOhuhuShadowHighlight(item.color, COLORS);
+            const highlight = res.highlight;
+            const shadow = res.shadow;
 
             const hHex = highlight?.hex || '#f5f5f5';
             const sHex = shadow?.hex || '#222';
 
-            const hText = !highlight ? 'No highlight' : (isOhuhu ? (useOldCode && highlight.oldCode ? highlight.oldCode : highlight.newCode) : highlight.code);
-            const sText = !shadow ? 'No shadow' : (isOhuhu ? (useOldCode && shadow.oldCode ? shadow.oldCode : shadow.newCode) : shadow.code);
+            const hText = !highlight ? 'No highlight' : (useOldCode && highlight.oldCode ? highlight.oldCode : highlight.newCode);
+            const sText = !shadow ? 'No shadow' : (useOldCode && shadow.oldCode ? shadow.oldCode : shadow.newCode);
 
             return (
               <>
@@ -212,29 +198,22 @@ export default function Generator() {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [useOldCode, setUseOldCode] = useState(false);
 
-  const generatePalette = useCallback((currentStyle: string, currentCount: number, currentPalette: PaletteItem[], brand: string) => {
-    const isOhuhu = brand === "Ohuhu";
-
+  const generatePalette = useCallback((currentStyle: string, currentCount: number, currentPalette: PaletteItem[]) => {
     const currentLocks = currentPalette.reduce((acc, item, i) => {
-      if (item.locked && ((isOhuhu && 'family' in item.color) || (!isOhuhu && !('family' in item.color)))) {
+      if (item.locked && 'family' in item.color) {
         acc[i] = true;
       }
       return acc;
     }, {} as Record<number, boolean>);
 
     const currentColors = currentPalette.map(item => {
-      if ((isOhuhu && 'family' in item.color) || (!isOhuhu && !('family' in item.color))) {
+      if ('family' in item.color) {
         return item.color;
       }
       return undefined;
     });
 
-    let newColors: any[] = [];
-    if (isOhuhu) {
-      newColors = engineGeneratePalette(COLORS, currentStyle as StyleMode, currentCount, currentLocks, currentColors as ColorItem[]);
-    } else {
-      newColors = generateDecoPalette(DECOTIME_COLORS, currentStyle as DecoStyleMode, currentCount, currentLocks, currentColors as DecotimeColor[]);
-    }
+    const newColors = engineGeneratePalette(COLORS, currentStyle as StyleMode, currentCount, currentLocks, currentColors as ColorItem[]);
 
     setPalette(newColors.map((color, i) => {
       const isLocked = currentLocks[i] || false;
@@ -249,12 +228,12 @@ export default function Generator() {
 
   useEffect(() => {
     setStyleMode("All");
-    generatePalette("All", count, [], markerBrand);
+    generatePalette("All", count, []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markerBrand]);
 
   const handleGenerate = () => {
-    generatePalette(styleMode, count, palette, markerBrand);
+    generatePalette(styleMode, count, palette);
   };
 
   const toggleLock = (id: string) => {
@@ -289,7 +268,6 @@ export default function Generator() {
   };
 
   const paletteIds = palette.map(item => item.id);
-  const activeZones = markerBrand === "Ohuhu" ? ZONES : DECO_ZONES;
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-stone-50 text-stone-900 font-sans">
@@ -332,7 +310,7 @@ export default function Generator() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Ohuhu" className="text-xs">Ohuhu</SelectItem>
-                <SelectItem value="Decotime" className="text-xs">Decotime</SelectItem>
+                <SelectItem value="Decotime" disabled className="text-xs">Decotime (Soon)</SelectItem>
                 <SelectItem value="Chen Rui" disabled className="text-xs">Chen Rui (Soon)</SelectItem>
                 <SelectItem value="Arrtx" disabled className="text-xs">Arrtx (Soon)</SelectItem>
               </SelectContent>
@@ -357,17 +335,23 @@ export default function Generator() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3 min-w-0 shrink-0">
-            <Select value={styleMode} onValueChange={(v: string) => { setStyleMode(v); generatePalette(v, count, palette, markerBrand); }}>
+            <Select value={styleMode} onValueChange={(v: string) => { setStyleMode(v); generatePalette(v, count, palette); }}>
               <SelectTrigger className="w-[55px] sm:w-[100px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1 sm:!px-2 truncate shrink pointer-events-auto">
                 <SelectValue placeholder="Style" />
               </SelectTrigger>
               <SelectContent>
                 {(() => {
-                  const keys = Object.keys(activeZones);
+                  const keys = Object.keys(ZONES);
                   const sorted = [];
                   if (keys.includes('All')) sorted.push('All');
                   if (keys.includes('Pastel')) sorted.push('Pastel');
-                  sorted.push(...keys.filter(k => k !== 'All' && k !== 'Pastel'));
+                  const remaining = keys.filter(k => k !== 'All' && k !== 'Pastel' && k !== 'Neon');
+                  for (const k of remaining) {
+                    sorted.push(k);
+                    if (k === 'Vintage' && keys.includes('Neon')) {
+                      sorted.push('Neon');
+                    }
+                  }
                   return sorted.map(z => (
                     <SelectItem key={z} value={z} className="text-xs">{z}</SelectItem>
                   ));
@@ -380,7 +364,7 @@ export default function Generator() {
                 onClick={() => {
                   const newCount = Math.max(2, count - 1);
                   setCount(newCount);
-                  generatePalette(styleMode, newCount, palette, markerBrand);
+                  generatePalette(styleMode, newCount, palette);
                 }}
                 className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
                 disabled={count <= 2}
@@ -392,7 +376,7 @@ export default function Generator() {
                 onClick={() => {
                   const newCount = Math.min(7, count + 1);
                   setCount(newCount);
-                  generatePalette(styleMode, newCount, palette, markerBrand);
+                  generatePalette(styleMode, newCount, palette);
                 }}
                 className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
                 disabled={count >= 7}
