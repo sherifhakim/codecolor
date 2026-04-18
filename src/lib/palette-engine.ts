@@ -9,6 +9,12 @@ const PASTEL_CODES = new Set([
   "Y00", "Y03", "Y06", "Y07", "Y26", "Y42", "YR00", "YR03", "YR05", "YR07", "YR33", "YR45", "YR47", "YR56", "YR57", "YR58", "E22", "R25", "R50", "RV01", "RV23", "RV35", "V32", "V34", "V38", "BV26", "BV31", "BV38", "B02", "B06", "B310", "BG04", "BG09", "BG21", "G24", "G36", "G41", "G43", "G49", "YG06", "YG07", "YG66", "CG02", "BGY02", "YGY11", "WG10", "GG03", "GG10"
 ]);
 
+const NEON_CODES = new Set([
+  "B08", "FY01", "FY02", "RV08", "RV111", "Y111", "Y19", "Y28",
+  "YR111", "YR112", "YR19", "YR513", "Y17", "RV310", "BG212",
+  "FY03", "FY00", "V112", "V414", "RV39"
+]);
+
 export const ZONES = {
   All: () => true,
   Dark: (c: ColorItem) => CHROMATIC_FAMILIES.includes(c.family) && c.l < 35,
@@ -20,14 +26,12 @@ export const ZONES = {
     if (c.family === "YGY" || c.family === "BGY") return c.s >= 5;
     return c.s >= 20 && c.s <= 50;
   },
-  Neon: (c: ColorItem) =>
-    c.family === "FY" ||
-    (["RV", "R", "Y", "YR", "G", "BG"].includes(c.family) && c.s > 70),
   Summer: (c: ColorItem) => ["Y", "YR", "R", "RV", "BG", "G", "YG", "E"].includes(c.family) && c.l >= 50,
   Spring: (c: ColorItem) => ["RV", "G", "YG", "Y"].includes(c.family) && c.l > 70,
   Autumn: (c: ColorItem) => ["YR", "R", "E", "Y", "YG"].includes(c.family) && c.l >= 30 && c.l <= 70,
   Winter: (c: ColorItem) => ["B", "BV", "BG", "V", "CG", "WG"].includes(c.family),
   Pastel: (c: ColorItem) => PASTEL_CODES.has(c.newCode),
+  Neon: (c: ColorItem) => NEON_CODES.has(c.newCode),
 } as const;
 
 const HARMONY_MODES = ["Analogous", "Complementary", "Triadic", "Split Complementary"] as const;
