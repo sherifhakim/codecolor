@@ -23,7 +23,6 @@ const NEON_CODES = new Set([
 
 export const ZONES = {
   All: () => true,
-  Dark: (c: ColorItem) => CHROMATIC_FAMILIES.includes(c.family) && c.l < 35,
   Warm: (c: ColorItem) => ["Y", "YR", "R", "RV", "E", "YGY", "WG"].includes(c.family),
   Cold: (c: ColorItem) => ["B", "BV", "BG", "CG", "BGY"].includes(c.family),
   Vintage: (c: ColorItem) => {

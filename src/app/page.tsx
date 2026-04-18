@@ -345,7 +345,7 @@ export default function Generator() {
                   const sorted = [];
                   if (keys.includes('All')) sorted.push('All');
                   if (keys.includes('Pastel')) sorted.push('Pastel');
-                  const remaining = keys.filter(k => k !== 'All' && k !== 'Pastel' && k !== 'Neon');
+                  const remaining = keys.filter(k => k !== 'All' && k !== 'Pastel' && k !== 'Neon' && k !== 'Dark');
                   for (const k of remaining) {
                     sorted.push(k);
                     if (k === 'Vintage' && keys.includes('Neon')) {
