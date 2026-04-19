@@ -90,6 +90,7 @@ export function generatePalette(
   currentLocks: Record<number, boolean>,
   currentColors: ColorItem[]
 ): ColorItem[] {
+  dataset = dataset.filter(c => c.newCode !== "0" && c.newCode !== "120");
   // Randomly pick a harmony method on each generation
   const currentHarmony: HarmonyMode = HARMONY_MODES[Math.floor(Math.random() * HARMONY_MODES.length)];
   // 1. Filter by Style Zone
@@ -141,7 +142,50 @@ export function generatePalette(
     let options = availablePool.filter(c => !usedFamilies.has(c.family));
     if (targetFamilies && targetFamilies.length > 0) {
       const familyOptions = options.filter(c => targetFamilies!.includes(c.family));
-      if (familyOptions.length > 0) options = familyOptions;
+      if (familyOptions.length > 0) {
+        options = familyOptions;
+      } else {
+        // No colors in target family - walk the WHEEL to find nearest available family
+        const targetFamily = targetFamilies[0];
+        const targetIdx = WHEEL.indexOf(targetFamily);
+        if (targetIdx !== -1) {
+          const len = WHEEL.length;
+          let nearestFamily: string | null = null;
+          let dist = 1;
+          const maxDist = Math.floor(len / 2);
+          
+          while (dist <= maxDist && !nearestFamily) {
+            const leftIdx = (targetIdx - dist + len) % len;
+            const rightIdx = (targetIdx + dist) % len;
+            const leftFamily = WHEEL[leftIdx];
+            const rightFamily = WHEEL[rightIdx];
+            
+            // Check if left family has available colors
+            if (allowedChromatic.includes(leftFamily)) {
+              const leftOptions = options.filter(c => c.family === leftFamily);
+              if (leftOptions.length > 0) {
+                nearestFamily = leftFamily;
+                break;
+              }
+            }
+            
+            // Check if right family has available colors
+            if (allowedChromatic.includes(rightFamily)) {
+              const rightOptions = options.filter(c => c.family === rightFamily);
+              if (rightOptions.length > 0) {
+                nearestFamily = rightFamily;
+                break;
+              }
+            }
+            
+            dist++;
+          }
+          
+          if (nearestFamily) {
+            options = options.filter(c => c.family === nearestFamily);
+          }
+        }
+      }
     }
 
     if (options.length === 0) options = availablePool; // fallback
