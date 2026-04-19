@@ -121,19 +121,19 @@ export function generatePalette(
     let targetFamilies: string[] | null = null;
     if (allowedChromatic.length > 0) {
       let targetIdx = baseFamilyIdx;
-      const len = WHEEL.length;
       if (currentHarmony === "Analogous") {
-        if (i % 3 === 1) targetIdx = baseFamilyIdx - 1;
-        if (i % 3 === 2) targetIdx = baseFamilyIdx + 1;
+        if (i % 5 === 1) targetIdx = (baseFamilyIdx + 1) % 10;
+        if (i % 5 === 2) targetIdx = (baseFamilyIdx + 2) % 10;
+        if (i % 5 === 3) targetIdx = (baseFamilyIdx - 1 + 10) % 10;
+        if (i % 5 === 4) targetIdx = (baseFamilyIdx - 2 + 10) % 10;
       } else if (currentHarmony === "Complementary") {
-        if (i % 2 === 1) targetIdx = baseFamilyIdx + Math.round(len / 2);
+        if (i % 2 === 1) targetIdx = (baseFamilyIdx + 5) % 10;
       } else if (currentHarmony === "Triadic") {
-        if (i % 3 === 1) targetIdx = baseFamilyIdx + Math.round(len / 3);
-        if (i % 3 === 2) targetIdx = baseFamilyIdx + Math.round((len / 3) * 2);
+        if (i % 3 === 1) targetIdx = (baseFamilyIdx + 3) % 10;
+        if (i % 3 === 2) targetIdx = (baseFamilyIdx + 6) % 10;
       } else if (currentHarmony === "Split Complementary") {
-        const half = Math.round(len / 2);
-        if (i % 3 === 1) targetIdx = baseFamilyIdx + half - 1;
-        if (i % 3 === 2) targetIdx = baseFamilyIdx + half + 1;
+        if (i % 3 === 1) targetIdx = (baseFamilyIdx + 4) % 10;
+        if (i % 3 === 2) targetIdx = (baseFamilyIdx + 6) % 10;
       }
       const resolvedFamily = snapToZone(targetIdx, allowedChromatic);
       if (resolvedFamily) targetFamilies = [resolvedFamily];
@@ -145,18 +145,17 @@ export function generatePalette(
       if (familyOptions.length > 0) {
         options = familyOptions;
       } else {
-        // No colors in target family - walk the WHEEL to find nearest available family
+        // No colors in target family - walk ±1 step from target index on WHEEL (max 2 steps away)
         const targetFamily = targetFamilies[0];
         const targetIdx = WHEEL.indexOf(targetFamily);
         if (targetIdx !== -1) {
-          const len = WHEEL.length;
           let nearestFamily: string | null = null;
           let dist = 1;
-          const maxDist = Math.floor(len / 2);
+          const maxDist = 2;
           
           while (dist <= maxDist && !nearestFamily) {
-            const leftIdx = (targetIdx - dist + len) % len;
-            const rightIdx = (targetIdx + dist) % len;
+            const leftIdx = (targetIdx - dist + 10) % 10;
+            const rightIdx = (targetIdx + dist) % 10;
             const leftFamily = WHEEL[leftIdx];
             const rightFamily = WHEEL[rightIdx];
             
