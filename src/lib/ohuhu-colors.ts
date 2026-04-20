@@ -536,6 +536,19 @@ export const COLORS: ColorItem[] = OHUHU_COLORS.map(c => {
     saturation = parseInt(match[2]);
     brightness = parseInt(match[3]);
   }
+  
+  // Merge FY colors into their closest chromatic families
+  const FY_FAMILY_MAP: Record<string, string> = {
+    "FY00": "Y",   // Fluorescent Yellow → Y family
+    "FY01": "YR",  // Fluorescent Orange → YR family
+    "FY02": "R",   // Fluorescent Red → R family
+    "FY03": "V"    // Fluorescent Violet → V family
+  };
+  
+  if (FY_FAMILY_MAP[code]) {
+    family = FY_FAMILY_MAP[code];
+  }
+  
   const hsl = hexToHSL(c.hex);
   return { ...c, family, saturation, brightness, ...hsl };
 });

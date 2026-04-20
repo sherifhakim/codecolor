@@ -25,15 +25,10 @@ export const ZONES = {
   All: () => true,
   Warm: (c: ColorItem) => ["Y", "YR", "R", "RV", "E", "YGY", "WG"].includes(c.family),
   Cold: (c: ColorItem) => ["B", "BV", "BG", "CG", "BGY"].includes(c.family),
-  Vintage: (c: ColorItem) => {
-    const families = ["E", "YR", "Y", "YGY", "WG", "BG", "BGY", "R", "G", "YG", "BV", "V"];
-    if (!families.includes(c.family)) return false;
-    if (c.family === "YGY" || c.family === "BGY") return c.s >= 5;
-    return c.s >= 20 && c.s <= 50;
-  },
+  Vintage: (c: ColorItem) => ["E", "YR", "Y", "YGY", "WG", "BG", "BGY", "R", "G", "YG", "BV", "V"].includes(c.family),
   Summer: (c: ColorItem) => SUMMER_CODES.has(c.newCode),
-  Spring: (c: ColorItem) => ["RV", "G", "YG", "Y"].includes(c.family) && c.l > 70,
-  Autumn: (c: ColorItem) => ["YR", "R", "E", "Y", "YG"].includes(c.family) && c.l >= 30 && c.l <= 70,
+  Spring: (c: ColorItem) => ["RV", "G", "YG", "Y"].includes(c.family),
+  Autumn: (c: ColorItem) => ["YR", "R", "E", "Y"].includes(c.family),
   Winter: (c: ColorItem) => ["B", "BV", "BG", "V", "CG", "WG"].includes(c.family),
   Pastel: (c: ColorItem) => PASTEL_CODES.has(c.newCode),
   Neon: (c: ColorItem) => NEON_CODES.has(c.newCode),
@@ -98,6 +93,10 @@ export function generatePalette(
   let pool = dataset.filter(zoneFilter);
   if (pool.length === 0) pool = dataset;
 
+  if (currentStyle !== "Neon") {
+    pool = pool.filter(c => !c.newCode.startsWith("FY"));
+  }
+
   const allowedChromatic = [...new Set(pool.filter(c => CHROMATIC_FAMILIES.includes(c.family)).map(c => c.family))];
   const newColors: ColorItem[] = [...currentColors];
   newColors.length = currentCount;
@@ -108,99 +107,106 @@ export function generatePalette(
     baseFamilyIdx = WHEEL.indexOf(allowedChromatic[Math.floor(Math.random() * allowedChromatic.length)]);
   }
 
+  // Define allowed family indices for each harmony
+  let allowedIndices: number[] = [];
+  if (currentHarmony === "Analogous") {
+    // [i-2, i-1, i, i+1, i+2] % 10
+    allowedIndices = [
+      (baseFamilyIdx - 2 + 10) % 10,
+      (baseFamilyIdx - 1 + 10) % 10,
+      baseFamilyIdx,
+      (baseFamilyIdx + 1) % 10,
+      (baseFamilyIdx + 2) % 10
+    ];
+  } else if (currentHarmony === "Complementary") {
+    // [i, (i+5) % 10]
+    allowedIndices = [baseFamilyIdx, (baseFamilyIdx + 5) % 10];
+  } else if (currentHarmony === "Triadic") {
+    // [i, (i+3) % 10, (i+6) % 10]
+    allowedIndices = [baseFamilyIdx, (baseFamilyIdx + 3) % 10, (baseFamilyIdx + 6) % 10];
+  } else if (currentHarmony === "Split Complementary") {
+    // [i, (i+4) % 10, (i+6) % 10]
+    allowedIndices = [baseFamilyIdx, (baseFamilyIdx + 4) % 10, (baseFamilyIdx + 6) % 10];
+  }
+
+  // Snap allowed indices to zone and get allowed families
+  const allowedFamilies: string[] = [];
+  for (const idx of allowedIndices) {
+    const snapped = snapToZone(idx, allowedChromatic);
+    if (snapped && !allowedFamilies.includes(snapped)) {
+      allowedFamilies.push(snapped);
+    }
+  }
+
   const availablePool = [...pool];
-  const usedFamilies = new Set<string>();
+  const usedNewCodes = new Set<string>();
+  const familyUsageCount = new Map<string, number>();
 
   for (let i = 0; i < currentCount; i++) {
     if (currentLocks[i] && currentColors[i]) {
       newColors[i] = currentColors[i];
-      usedFamilies.add(currentColors[i].family);
+      usedNewCodes.add(currentColors[i].newCode);
+      const count = familyUsageCount.get(currentColors[i].family) || 0;
+      familyUsageCount.set(currentColors[i].family, count + 1);
       continue;
     }
 
-    let targetFamilies: string[] | null = null;
-    if (allowedChromatic.length > 0) {
-      let targetIdx = baseFamilyIdx;
-      if (currentHarmony === "Analogous") {
-        if (i % 5 === 1) targetIdx = (baseFamilyIdx + 1) % 10;
-        if (i % 5 === 2) targetIdx = (baseFamilyIdx + 2) % 10;
-        if (i % 5 === 3) targetIdx = (baseFamilyIdx - 1 + 10) % 10;
-        if (i % 5 === 4) targetIdx = (baseFamilyIdx - 2 + 10) % 10;
-      } else if (currentHarmony === "Complementary") {
-        if (i % 2 === 1) targetIdx = (baseFamilyIdx + 5) % 10;
-      } else if (currentHarmony === "Triadic") {
-        if (i % 3 === 1) targetIdx = (baseFamilyIdx + 3) % 10;
-        if (i % 3 === 2) targetIdx = (baseFamilyIdx + 6) % 10;
-      } else if (currentHarmony === "Split Complementary") {
-        if (i % 3 === 1) targetIdx = (baseFamilyIdx + 4) % 10;
-        if (i % 3 === 2) targetIdx = (baseFamilyIdx + 6) % 10;
-      }
-      const resolvedFamily = snapToZone(targetIdx, allowedChromatic);
-      if (resolvedFamily) targetFamilies = [resolvedFamily];
+    let targetFamily: string | null = null;
+    
+    if (allowedFamilies.length > 0) {
+      // Cycle through allowed families, distributing slots evenly
+      targetFamily = allowedFamilies[i % allowedFamilies.length];
     }
 
-    let options = availablePool.filter(c => !usedFamilies.has(c.family));
-    if (targetFamilies && targetFamilies.length > 0) {
-      const familyOptions = options.filter(c => targetFamilies!.includes(c.family));
+    let options = availablePool.filter(c => !usedNewCodes.has(c.newCode));
+    
+    if (targetFamily) {
+      // Try to get color from target family
+      const familyOptions = options.filter(c => c.family === targetFamily);
+      
       if (familyOptions.length > 0) {
         options = familyOptions;
       } else {
-        // No colors in target family - walk ±1 step from target index on WHEEL (max 2 steps away)
-        const targetFamily = targetFamilies[0];
-        const targetIdx = WHEEL.indexOf(targetFamily);
-        if (targetIdx !== -1) {
-          let nearestFamily: string | null = null;
-          let dist = 1;
-          const maxDist = 2;
+        // No colors available in target family - try neutral/bridge color from off-wheel
+        const OFF_WHEEL = ["E", "CG", "WG", "GG", "BGY", "YGY"];
+        const offWheelCount = newColors.slice(0, i).filter(c => OFF_WHEEL.includes(c.family)).length;
+        
+        // Maximum 1 off-wheel color per palette
+        if (offWheelCount < 1) {
+          const neutralOptions = options.filter(c => {
+            if (!OFF_WHEEL.includes(c.family)) return false;
+            if (c.family === "E" && c.l <= 35) return false; // For E: only l > 35
+            return true;
+          });
           
-          while (dist <= maxDist && !nearestFamily) {
-            const leftIdx = (targetIdx - dist + 10) % 10;
-            const rightIdx = (targetIdx + dist) % 10;
-            const leftFamily = WHEEL[leftIdx];
-            const rightFamily = WHEEL[rightIdx];
-            
-            // Check if left family has available colors
-            if (allowedChromatic.includes(leftFamily)) {
-              const leftOptions = options.filter(c => c.family === leftFamily);
-              if (leftOptions.length > 0) {
-                nearestFamily = leftFamily;
-                break;
-              }
+          if (neutralOptions.length > 0) {
+            options = neutralOptions;
+          } else {
+            // No neutral available, try other allowed families
+            const otherAllowedOptions = options.filter(c => allowedFamilies.includes(c.family));
+            if (otherAllowedOptions.length > 0) {
+              options = otherAllowedOptions;
             }
-            
-            // Check if right family has available colors
-            if (allowedChromatic.includes(rightFamily)) {
-              const rightOptions = options.filter(c => c.family === rightFamily);
-              if (rightOptions.length > 0) {
-                nearestFamily = rightFamily;
-                break;
-              }
-            }
-            
-            dist++;
           }
-          
-          if (nearestFamily) {
-            options = options.filter(c => c.family === nearestFamily);
+        } else {
+          // Already have neutral, try other allowed families
+          const otherAllowedOptions = options.filter(c => allowedFamilies.includes(c.family));
+          if (otherAllowedOptions.length > 0) {
+            options = otherAllowedOptions;
           }
         }
       }
     }
 
-    if (options.length === 0) options = availablePool; // fallback
+    if (options.length === 0) options = availablePool.filter(c => !usedNewCodes.has(c.newCode)); // fallback
     if (options.length === 0) options = dataset; // desperate fallback
 
     const choice = options[Math.floor(Math.random() * options.length)];
     newColors[i] = choice;
-    // Allow repeated picks from repeatable families (e.g. YGY, BGY in Vintage)
-    const repeatableFamilies = ["YGY", "BGY"];
-    if (!repeatableFamilies.includes(choice.family)) {
-      usedFamilies.add(choice.family);
-    }
-
-    // Remove chosen from pool to avoid exact dupes
-    const poolIdx = availablePool.findIndex(c => c.newCode === choice.newCode);
-    if (poolIdx !== -1) availablePool.splice(poolIdx, 1);
+    usedNewCodes.add(choice.newCode);
+    
+    const count = familyUsageCount.get(choice.family) || 0;
+    familyUsageCount.set(choice.family, count + 1);
   }
 
   return newColors;
