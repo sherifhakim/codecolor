@@ -25,16 +25,22 @@ export const ZONES = {
   All: () => true,
   Warm: (c: ColorItem) => ["Y", "YR", "R", "RV", "E", "YGY", "WG"].includes(c.family),
   Cold: (c: ColorItem) => ["B", "BV", "BG", "CG", "BGY"].includes(c.family),
-  Vintage: (c: ColorItem) => ["E", "YR", "Y", "YGY", "WG", "BG", "BGY", "R", "G", "YG", "BV", "V"].includes(c.family),
   Summer: (c: ColorItem) => SUMMER_CODES.has(c.newCode),
-  Spring: (c: ColorItem) => ["RV", "G", "YG", "Y"].includes(c.family),
+  Spring: (c: ColorItem) => ["RV", "G", "YG", "Y", "BG", "B", "GG"].includes(c.family),
   Autumn: (c: ColorItem) => ["YR", "R", "E", "Y"].includes(c.family),
   Winter: (c: ColorItem) => ["B", "BV", "BG", "V", "CG", "WG"].includes(c.family),
   Pastel: (c: ColorItem) => PASTEL_CODES.has(c.newCode),
   Neon: (c: ColorItem) => NEON_CODES.has(c.newCode),
 } as const;
 
-const HARMONY_MODES = ["Analogous", "Complementary", "Triadic", "Split Complementary"] as const;
+const HARMONY_MODES = [
+  "Analogous", "Analogous", "Analogous",
+  "Triadic", "Triadic",
+  "Split Complementary",
+  "Square",
+  "Monochromatic",
+  "Complementary",
+] as const;
 type HarmonyMode = typeof HARMONY_MODES[number];
 export type StyleMode = keyof typeof ZONES;
 
@@ -78,6 +84,26 @@ export function getShadowHighlight(color: ColorItem, dataset: ColorItem[]) {
   return { highlight, shadow };
 }
 
+const E_FAMILY_MAP: Record<string, string> = {
+  // YR family
+  "E415": "YR", "E610": "YR", "E44": "YR", "E58": "YR", "E46": "YR",
+  // R family
+  "E85": "R", "E69": "R", "E614": "R", "E92": "R", "E97": "R", "E914": "R", "E713": "R",
+  // Y family
+  "E211": "Y", "E22": "Y", "E26": "Y", "E17": "Y", "E212": "Y", "E14": "Y", "E19": "Y",
+  // YG family
+  "E011": "YG", "E314": "YG",
+  // G family
+  "E05": "G",
+};
+
+function getHarmonyFamily(color: ColorItem): string {
+  if (color.family === "E") {
+    return E_FAMILY_MAP[color.newCode] || "YR";
+  }
+  return color.family;
+}
+
 export function generatePalette(
   dataset: ColorItem[],
   currentStyle: StyleMode,
@@ -97,7 +123,7 @@ export function generatePalette(
     pool = pool.filter(c => !c.newCode.startsWith("FY"));
   }
 
-  const allowedChromatic = [...new Set(pool.filter(c => CHROMATIC_FAMILIES.includes(c.family)).map(c => c.family))];
+  const allowedChromatic = [...new Set(pool.filter(c => CHROMATIC_FAMILIES.includes(getHarmonyFamily(c))).map(c => getHarmonyFamily(c)))];
   const newColors: ColorItem[] = [...currentColors];
   newColors.length = currentCount;
 
@@ -127,6 +153,15 @@ export function generatePalette(
   } else if (currentHarmony === "Split Complementary") {
     // [i, (i+4) % 10, (i+6) % 10]
     allowedIndices = [baseFamilyIdx, (baseFamilyIdx + 4) % 10, (baseFamilyIdx + 6) % 10];
+  } else if (currentHarmony === "Square") {
+    allowedIndices = [
+      baseFamilyIdx,
+      (baseFamilyIdx + 2) % 10,
+      (baseFamilyIdx + 5) % 10,
+      (baseFamilyIdx + 7) % 10
+    ];
+  } else if (currentHarmony === "Monochromatic") {
+    allowedIndices = [baseFamilyIdx];
   }
 
   // Snap allowed indices to zone and get allowed families
@@ -146,54 +181,31 @@ export function generatePalette(
     if (currentLocks[i] && currentColors[i]) {
       newColors[i] = currentColors[i];
       usedNewCodes.add(currentColors[i].newCode);
-      const count = familyUsageCount.get(currentColors[i].family) || 0;
-      familyUsageCount.set(currentColors[i].family, count + 1);
+      const mappedFamily = getHarmonyFamily(currentColors[i]);
+      const count = familyUsageCount.get(mappedFamily) || 0;
+      familyUsageCount.set(mappedFamily, count + 1);
       continue;
     }
 
     let targetFamily: string | null = null;
-    
+
     if (allowedFamilies.length > 0) {
       // Cycle through allowed families, distributing slots evenly
       targetFamily = allowedFamilies[i % allowedFamilies.length];
     }
 
     let options = availablePool.filter(c => !usedNewCodes.has(c.newCode));
-    
+
     if (targetFamily) {
       // Try to get color from target family
-      const familyOptions = options.filter(c => c.family === targetFamily);
-      
+      const familyOptions = options.filter(c => getHarmonyFamily(c) === targetFamily);
+
       if (familyOptions.length > 0) {
         options = familyOptions;
       } else {
-        // No colors available in target family - try neutral/bridge color from off-wheel
-        const OFF_WHEEL = ["E", "CG", "WG", "GG", "BGY", "YGY"];
-        const offWheelCount = newColors.slice(0, i).filter(c => OFF_WHEEL.includes(c.family)).length;
-        
-        // Maximum 1 off-wheel color per palette
-        if (offWheelCount < 1) {
-          const neutralOptions = options.filter(c => {
-            if (!OFF_WHEEL.includes(c.family)) return false;
-            if (c.family === "E" && c.l <= 35) return false; // For E: only l > 35
-            return true;
-          });
-          
-          if (neutralOptions.length > 0) {
-            options = neutralOptions;
-          } else {
-            // No neutral available, try other allowed families
-            const otherAllowedOptions = options.filter(c => allowedFamilies.includes(c.family));
-            if (otherAllowedOptions.length > 0) {
-              options = otherAllowedOptions;
-            }
-          }
-        } else {
-          // Already have neutral, try other allowed families
-          const otherAllowedOptions = options.filter(c => allowedFamilies.includes(c.family));
-          if (otherAllowedOptions.length > 0) {
-            options = otherAllowedOptions;
-          }
+        const otherAllowedOptions = options.filter(c => allowedFamilies.includes(getHarmonyFamily(c)));
+        if (otherAllowedOptions.length > 0) {
+          options = otherAllowedOptions;
         }
       }
     }
@@ -204,9 +216,10 @@ export function generatePalette(
     const choice = options[Math.floor(Math.random() * options.length)];
     newColors[i] = choice;
     usedNewCodes.add(choice.newCode);
-    
-    const count = familyUsageCount.get(choice.family) || 0;
-    familyUsageCount.set(choice.family, count + 1);
+
+    const mappedFamily = getHarmonyFamily(choice);
+    const count = familyUsageCount.get(mappedFamily) || 0;
+    familyUsageCount.set(mappedFamily, count + 1);
   }
 
   return newColors;

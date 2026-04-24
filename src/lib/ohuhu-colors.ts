@@ -13,8 +13,8 @@ function hexToHSL(hex: string) {
   g /= 255;
   b /= 255;
   const cmin = Math.min(r, g, b),
-        cmax = Math.max(r, g, b),
-        delta = cmax - cmin;
+    cmax = Math.max(r, g, b),
+    delta = cmax - cmin;
   let h = 0, s = 0, l = 0;
 
   if (delta == 0) h = 0;
@@ -536,7 +536,7 @@ export const COLORS: ColorItem[] = OHUHU_COLORS.map(c => {
     saturation = parseInt(match[2]);
     brightness = parseInt(match[3]);
   }
-  
+
   // Merge FY colors into their closest chromatic families
   const FY_FAMILY_MAP: Record<string, string> = {
     "FY00": "Y",   // Fluorescent Yellow → Y family
@@ -544,11 +544,11 @@ export const COLORS: ColorItem[] = OHUHU_COLORS.map(c => {
     "FY02": "R",   // Fluorescent Red → R family
     "FY03": "V"    // Fluorescent Violet → V family
   };
-  
+
   if (FY_FAMILY_MAP[code]) {
     family = FY_FAMILY_MAP[code];
   }
-  
+
   const hsl = hexToHSL(c.hex);
   return { ...c, family, saturation, brightness, ...hsl };
 });

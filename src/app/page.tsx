@@ -165,23 +165,33 @@ function SortableColorCard({
             const sText = !shadow ? 'No shadow' : (useOldCode && shadow.oldCode ? shadow.oldCode : shadow.newCode);
 
             return (
-              <>
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">HL</span>
-                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: hHex }}>
-                    {!highlight && <span className="text-[10px] leading-tight text-stone-400">No highlight</span>}
+              <div className="flex flex-col">
+                <div className="flex gap-2">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">HL</span>
+                    <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: hHex }}>
+                      {!highlight && <span className="text-[10px] leading-tight text-stone-400">No highlight</span>}
+                    </div>
+                    <span className="text-[10px] font-semibold text-stone-700">{hText}</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-stone-700">{hText}</span>
-                </div>
 
-                <div className="flex flex-col items-center border-l pl-2 border-stone-200">
-                  <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">SH</span>
-                  <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: sHex }}>
-                    {!shadow && <span className="text-[10px] leading-tight text-stone-500">No shadow</span>}
+                  <div className="flex flex-col items-center border-l pl-2 border-stone-200">
+                    <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">Base</span>
+                    <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: item.color.hex }}>
+                    </div>
+                    <span className="text-[10px] font-semibold text-stone-700">{displayCode}</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-stone-700">{sText}</span>
+
+                  <div className="flex flex-col items-center border-l pl-2 border-stone-200">
+                    <span className="text-[10px] uppercase font-bold text-stone-400 mb-1">SH</span>
+                    <div className="w-12 h-12 rounded-md shadow-inner mb-1 flex items-center justify-center text-center" style={{ backgroundColor: sHex }}>
+                      {!shadow && <span className="text-[10px] leading-tight text-stone-500">No shadow</span>}
+                    </div>
+                    <span className="text-[10px] font-semibold text-stone-700">{sText}</span>
+                  </div>
                 </div>
-              </>
+                <div className="text-[10px] text-stone-500 font-medium mt-2 text-center w-full">Light → Mid → Dark</div>
+              </div>
             );
           })()}
         </div>
@@ -197,8 +207,9 @@ export default function Generator() {
   const [palette, setPalette] = useState<PaletteItem[]>([]);
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
   const [useOldCode, setUseOldCode] = useState(false);
+  const [harmony, setHarmony] = useState<string>("Random");
 
-  const generatePalette = useCallback((currentStyle: string, currentCount: number, currentPalette: PaletteItem[]) => {
+  const generatePalette = useCallback((currentStyle: string, currentCount: number, currentPalette: PaletteItem[], currentHarmony: string) => {
     const currentLocks = currentPalette.reduce((acc, item, i) => {
       if (item.locked && 'family' in item.color) {
         acc[i] = true;
@@ -213,7 +224,34 @@ export default function Generator() {
       return undefined;
     });
 
-    const newColors = engineGeneratePalette(COLORS, currentStyle as StyleMode, currentCount, currentLocks, currentColors as ColorItem[]);
+    const originalRandom = Math.random;
+    let randomCalls = 0;
+    
+    // The HARMONY_MODES array in palette-engine.ts has 9 elements:
+    // 0-2: Analogous, 3-4: Triadic, 5: Split Complementary, 6: Square, 7: Monochromatic, 8: Complementary
+    const HARMONY_INDEX: Record<string, number> = {
+      "Analogous": 0,
+      "Triadic": 0.34,
+      "Split Complementary": 0.56,
+      "Square": 0.67,
+      "Monochromatic": 0.78,
+      "Complementary": 0.89
+    };
+
+    Math.random = function () {
+      if (randomCalls === 0) {
+        randomCalls++;
+        return HARMONY_INDEX[currentHarmony] ?? originalRandom();
+      }
+      return originalRandom();
+    };
+
+    let newColors: ColorItem[];
+    try {
+      newColors = engineGeneratePalette(COLORS, currentStyle as StyleMode, currentCount, currentLocks, currentColors as ColorItem[]);
+    } finally {
+      Math.random = originalRandom;
+    }
 
     setPalette(newColors.map((color, i) => {
       const isLocked = currentLocks[i] || false;
@@ -228,12 +266,13 @@ export default function Generator() {
 
   useEffect(() => {
     setStyleMode("All");
-    generatePalette("All", count, []);
+    setHarmony("Random");
+    generatePalette("All", count, [], "Random");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markerBrand]);
 
   const handleGenerate = () => {
-    generatePalette(styleMode, count, palette);
+    generatePalette(styleMode, count, palette, harmony);
   };
 
   const toggleLock = (id: string) => {
@@ -271,10 +310,27 @@ export default function Generator() {
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-stone-50 text-stone-900 font-sans">
-      <header className="shrink-0 h-[48px] w-full bg-cream px-4 sm:px-6 border-b border-stone-200 z-10 flex items-center shadow-sm">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold font-serif text-stone-800 tracking-tight">CodeColor</h1>
-          <div className="text-xs sm:text-sm font-medium text-stone-500">Find your perfect palette</div>
+      <header className="shrink-0 h-[48px] w-full bg-cream px-4 sm:px-6 border-b border-stone-200 z-10 flex items-center shadow-sm justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-stone-800 tracking-tight shrink-0">CodeColor</h1>
+          <div className="text-xs sm:text-sm font-medium text-stone-500 hidden sm:block truncate shrink">Find your perfect palette</div>
+        </div>
+        
+        <div className="flex items-center gap-2 shrink-0">
+          <Select value={harmony} onValueChange={(v: string) => { setHarmony(v); generatePalette(styleMode, count, palette, v); }}>
+            <SelectTrigger className="w-[130px] sm:w-[160px] text-xs h-8 bg-white border-stone-200 shadow-sm pointer-events-auto">
+              <SelectValue placeholder="Harmony" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Random" className="text-xs">Random</SelectItem>
+              <SelectItem value="Analogous" className="text-xs">Analogous</SelectItem>
+              <SelectItem value="Complementary" className="text-xs">Complementary</SelectItem>
+              <SelectItem value="Triadic" className="text-xs">Triadic</SelectItem>
+              <SelectItem value="Split Complementary" className="text-xs">Split Complementary</SelectItem>
+              <SelectItem value="Monochromatic" className="text-xs">Monochromatic</SelectItem>
+              <SelectItem value="Square" className="text-xs">Square</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </header>
 
@@ -335,7 +391,7 @@ export default function Generator() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3 min-w-0 shrink-0">
-            <Select value={styleMode} onValueChange={(v: string) => { setStyleMode(v); generatePalette(v, count, palette); }}>
+            <Select value={styleMode} onValueChange={(v: string) => { setStyleMode(v); generatePalette(v, count, palette, harmony); }}>
               <SelectTrigger className="w-[55px] sm:w-[100px] text-[10px] sm:text-xs h-9 bg-stone-50 border-stone-300 !px-1 sm:!px-2 truncate shrink pointer-events-auto">
                 <SelectValue placeholder="Style" />
               </SelectTrigger>
@@ -348,9 +404,9 @@ export default function Generator() {
                   const remaining = keys.filter(k => k !== 'All' && k !== 'Pastel' && k !== 'Neon' && k !== 'Dark');
                   for (const k of remaining) {
                     sorted.push(k);
-                    if (k === 'Vintage' && keys.includes('Neon')) {
-                      sorted.push('Neon');
-                    }
+                  }
+                  if (keys.includes('Neon')) {
+                    sorted.push('Neon');
                   }
                   return sorted.map(z => (
                     <SelectItem key={z} value={z} className="text-xs">{z}</SelectItem>
@@ -364,7 +420,7 @@ export default function Generator() {
                 onClick={() => {
                   const newCount = Math.max(2, count - 1);
                   setCount(newCount);
-                  generatePalette(styleMode, newCount, palette);
+                  generatePalette(styleMode, newCount, palette, harmony);
                 }}
                 className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
                 disabled={count <= 2}
@@ -376,7 +432,7 @@ export default function Generator() {
                 onClick={() => {
                   const newCount = Math.min(7, count + 1);
                   setCount(newCount);
-                  generatePalette(styleMode, newCount, palette);
+                  generatePalette(styleMode, newCount, palette, harmony);
                 }}
                 className="w-[22px] sm:w-[28px] h-full flex items-center justify-center hover:bg-stone-200 transition rounded-[4px] disabled:opacity-50 shrink-0"
                 disabled={count >= 7}
