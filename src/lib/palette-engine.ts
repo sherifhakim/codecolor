@@ -2,6 +2,41 @@ import type { ColorItem } from "./ohuhu-colors";
 
 export const CHROMATIC_FAMILIES = ["Y", "YR", "R", "RV", "V", "BV", "B", "BG", "G", "YG"];
 
+const COMPLEMENT_MAP: Record<string, string> = {
+  "Y": "V",
+  "YR": "B",
+  "R": "G",
+  "RV": "YG",
+  "V": "Y",
+  "BV": "YR",
+  "B": "YR",
+  "BG": "R",
+  "G": "R",
+  "YG": "RV",
+};
+
+const SPLIT_COMPLEMENT_MAP: Record<string, [string, string]> = {
+  Y: ["RV", "BV"],
+
+  YR: ["BG", "BV"],
+
+  R: ["YG", "BG"],
+
+  RV: ["G", "Y"],
+
+  V: ["YR", "YG"],
+
+  BV: ["Y", "YR"],
+
+  B: ["R", "YR"],
+
+  BG: ["R", "RV"],
+
+  G: ["R", "RV"],
+
+  YG: ["R", "V"],
+};
+
 const PASTEL_CODES = new Set([
   // Sweetness
   "Y02", "Y14", "Y45", "Y55", "Y62", "Y69", "YR06", "YR11", "YR43", "YR52", "YR55", "YR59", "E05", "E14", "E26", "E46", "E85", "E92", "R15", "R22", "R27", "R54", "RV04", "RV05", "RV25", "RV33", "RV34", "V14", "V22", "BV05", "BV32", "BV35", "B03", "B05", "B21", "B28", "BG24", "BG310", "G34", "G47", "CG01", "CG24", "BGY00", "YGY02", "YGY13", "WG01", "WG04", "GG24",
@@ -35,9 +70,7 @@ export const ZONES = {
 
 const HARMONY_MODES = [
   "Analogous", "Analogous", "Analogous",
-  "Triadic", "Triadic",
   "Split Complementary",
-  "Square",
   "Monochromatic",
   "Complementary",
 ] as const;
@@ -84,25 +117,7 @@ export function getShadowHighlight(color: ColorItem, dataset: ColorItem[]) {
   return { highlight, shadow };
 }
 
-const E_FAMILY_MAP: Record<string, string> = {
-  // YR family
-  "E415": "YR", "E610": "YR", "E44": "YR", "E58": "YR", "E46": "YR",
-  // R family
-  "E85": "R", "E69": "R", "E614": "R", "E92": "R", "E97": "R", "E914": "R", "E713": "R",
-  // Y family
-  "E211": "Y", "E22": "Y", "E26": "Y", "E17": "Y", "E212": "Y", "E14": "Y", "E19": "Y",
-  // YG family
-  "E011": "YG", "E314": "YG",
-  // G family
-  "E05": "G",
-};
 
-function getHarmonyFamily(color: ColorItem): string {
-  if (color.family === "E") {
-    return E_FAMILY_MAP[color.newCode] || "YR";
-  }
-  return color.family;
-}
 
 export function generatePalette(
   dataset: ColorItem[],
@@ -123,7 +138,7 @@ export function generatePalette(
     pool = pool.filter(c => !c.newCode.startsWith("FY"));
   }
 
-  const allowedChromatic = [...new Set(pool.filter(c => CHROMATIC_FAMILIES.includes(getHarmonyFamily(c))).map(c => getHarmonyFamily(c)))];
+  const allowedChromatic = [...new Set(pool.filter(c => CHROMATIC_FAMILIES.includes(c.family)).map(c => c.family))];
   const newColors: ColorItem[] = [...currentColors];
   newColors.length = currentCount;
 
@@ -135,6 +150,8 @@ export function generatePalette(
 
   // Define allowed family indices for each harmony
   let allowedIndices: number[] = [];
+  const allowedFamilies: string[] = [];
+
   if (currentHarmony === "Analogous") {
     // [i-2, i-1, i, i+1, i+2] % 10
     allowedIndices = [
@@ -145,27 +162,16 @@ export function generatePalette(
       (baseFamilyIdx + 2) % 10
     ];
   } else if (currentHarmony === "Complementary") {
-    // [i, (i+5) % 10]
-    allowedIndices = [baseFamilyIdx, (baseFamilyIdx + 5) % 10];
-  } else if (currentHarmony === "Triadic") {
-    // [i, (i+3) % 10, (i+6) % 10]
-    allowedIndices = [baseFamilyIdx, (baseFamilyIdx + 3) % 10, (baseFamilyIdx + 6) % 10];
+    const baseFamily = WHEEL[baseFamilyIdx];
+    allowedFamilies.push(baseFamily, COMPLEMENT_MAP[baseFamily]);
   } else if (currentHarmony === "Split Complementary") {
-    // [i, (i+4) % 10, (i+6) % 10]
-    allowedIndices = [baseFamilyIdx, (baseFamilyIdx + 4) % 10, (baseFamilyIdx + 6) % 10];
-  } else if (currentHarmony === "Square") {
-    allowedIndices = [
-      baseFamilyIdx,
-      (baseFamilyIdx + 2) % 10,
-      (baseFamilyIdx + 5) % 10,
-      (baseFamilyIdx + 7) % 10
-    ];
+    const baseFamily = WHEEL[baseFamilyIdx];
+    allowedFamilies.push(baseFamily, ...SPLIT_COMPLEMENT_MAP[baseFamily]);
   } else if (currentHarmony === "Monochromatic") {
     allowedIndices = [baseFamilyIdx];
   }
 
   // Snap allowed indices to zone and get allowed families
-  const allowedFamilies: string[] = [];
   for (const idx of allowedIndices) {
     const snapped = snapToZone(idx, allowedChromatic);
     if (snapped && !allowedFamilies.includes(snapped)) {
@@ -181,7 +187,7 @@ export function generatePalette(
     if (currentLocks[i] && currentColors[i]) {
       newColors[i] = currentColors[i];
       usedNewCodes.add(currentColors[i].newCode);
-      const mappedFamily = getHarmonyFamily(currentColors[i]);
+      const mappedFamily = currentColors[i].family;
       const count = familyUsageCount.get(mappedFamily) || 0;
       familyUsageCount.set(mappedFamily, count + 1);
       continue;
@@ -198,12 +204,12 @@ export function generatePalette(
 
     if (targetFamily) {
       // Try to get color from target family
-      const familyOptions = options.filter(c => getHarmonyFamily(c) === targetFamily);
+      const familyOptions = options.filter(c => c.family === targetFamily);
 
       if (familyOptions.length > 0) {
         options = familyOptions;
       } else {
-        const otherAllowedOptions = options.filter(c => allowedFamilies.includes(getHarmonyFamily(c)));
+        const otherAllowedOptions = options.filter(c => allowedFamilies.includes(c.family));
         if (otherAllowedOptions.length > 0) {
           options = otherAllowedOptions;
         }
@@ -217,7 +223,7 @@ export function generatePalette(
     newColors[i] = choice;
     usedNewCodes.add(choice.newCode);
 
-    const mappedFamily = getHarmonyFamily(choice);
+    const mappedFamily = choice.family;
     const count = familyUsageCount.get(mappedFamily) || 0;
     familyUsageCount.set(mappedFamily, count + 1);
   }

@@ -239,7 +239,7 @@ export const OHUHU_COLORS = [
   { oldCode: "RV280", oldName: "Light Pink", newCode: "RV05", newName: "Pink Pearl", hex: "#f6bad1" },
   { oldCode: "RV300", oldName: "Tender Pink", newCode: "R25", newName: "Tender Pink", hex: "#f9acbe" },
   { oldCode: "RV330", oldName: "Strawberry Pink", newCode: "R310", newName: "Purplish Pink", hex: "#cf7693" },
-  { oldCode: "RV350", oldName: "Crimson", newCode: "R312", newName: "Magenta", hex: "#bc5f73" },
+  { oldCode: "RV350", oldName: "Crimson", newCode: "R312", newName: "Magenta", hex: "#F3355C" },
   { oldCode: "V020", oldName: "Pale Lilac", newCode: "RV34", newName: "Faded Lilac", hex: "#eccade" },
   { oldCode: "V030", oldName: "Mauve", newCode: "V14", newName: "Pale Purple", hex: "#cbb1d4" },
   { oldCode: "V050", oldName: "Pearl Violet", newCode: "V08", newName: "Light Violet", hex: "#a78cc2" },
@@ -290,7 +290,7 @@ export const OHUHU_COLORS = [
   { oldCode: "YG040", oldName: "Yellow Grey 04", newCode: "E14", newName: "Khaki Beige", hex: "#d7c9bc" },
   { oldCode: "YR030", oldName: "Carmine Red", newCode: "YR52", newName: "Cameo Rose", hex: "#f8e0d5" },
   { oldCode: "YR070", oldName: "Light Orange", newCode: "YR59", newName: "Cantaloupe", hex: "#fab69b" },
-  { oldCode: "YR090", oldName: "Peach Pie", newCode: "YR511", newName: "Pale Coral", hex: "#f49a73" },
+  { oldCode: "YR090", oldName: "Peach Pie", newCode: "YR511", newName: "Pale Coral", hex: "#FF926D" },
   { oldCode: "YR1", oldName: "Dark Yellow", newCode: "Y216", newName: "Caramel", hex: "#C68830" },
   { oldCode: "YR110", oldName: "Mellow Peach", newCode: "YR11", newName: "Peachy Blush", hex: "#fadec9" },
   { oldCode: "YR172", oldName: "Tiger Lily", newCode: "YR015", newName: "Burnt Orange", hex: "#d98855" },
@@ -359,154 +359,154 @@ export const OHUHU_COLORS = [
     oldCode: "YR209",
     oldName: "",
     newCode: "E47",
-    newName: "",
+    newName: "Camel",
     hex: "#c5977b"
   },
   {
     oldCode: "Y145",
     oldName: "",
     newCode: "E49",
-    newName: "",
+    newName: "Honey Brown",
     hex: "#af7b63"
   },
   {
     oldCode: "YR9",
     oldName: "",
     newCode: "E59",
-    newName: "",
+    newName: "Chestnut",
     hex: "#865047"
   },
   {
     oldCode: "YR148",
     oldName: "",
     newCode: "E66",
-    newName: "",
+    newName: "Light Fawn",
     hex: "#a07069"
   },
   {
     oldCode: "R26",
     oldName: "",
     newCode: "E75",
-    newName: "",
+    newName: "Light Rose Taupe",
     hex: "#b07a7c"
   },
   {
     oldCode: "R30",
     oldName: "",
     newCode: "E81",
-    newName: "",
+    newName: "Spanish Pink",
     hex: "#c99fb3"
   },
   {
     oldCode: "YG100",
     oldName: "",
     newCode: "E111",
-    newName: "",
+    newName: "Pewter Green",
     hex: "#bdad96"
   },
   {
     oldCode: "YR95",
     oldName: "",
     newCode: "E513",
-    newName: "",
+    newName: "Taupe Brown",
     hex: "#46353d"
   },
   {
     oldCode: "YR92",
     oldName: "",
     newCode: "E514",
-    newName: "",
+    newName: "Dark Chocolate",
     hex: "#32252e"
   },
   {
     oldCode: "YR10",
     oldName: "",
     newCode: "E612",
-    newName: "",
+    newName: "Brick Brown",
     hex: "#6b3533"
   },
   {
     oldCode: "YR91",
     oldName: "",
     newCode: "E615",
-    newName: "",
+    newName: "Cherry Cola",
     hex: "#472a2a"
   },
   {
     oldCode: "R27",
     oldName: "",
     newCode: "E711",
-    newName: "",
+    newName: "Old Mahogany",
     hex: "#916062"
   },
   {
     oldCode: "R28",
     oldName: "",
     newCode: "E814",
-    newName: "",
+    newName: "Caput Mortuum",
     hex: "#765b69"
   },
   {
     oldCode: "WG0.5",
     oldName: "",
     newCode: "YR02",
-    newName: "",
+    newName: "Peach Silk",
     hex: "#cdbdc2"
   },
   {
     oldCode: "YR7",
     oldName: "",
     newCode: "YR09",
-    newName: "",
+    newName: "Sandstone",
     hex: "#e07c45"
   },
   {
     oldCode: "YR205",
     oldName: "",
     newCode: "YR25",
-    newName: "",
+    newName: "Powder Orange",
     hex: "#e1956a"
   },
   {
     oldCode: "YR8",
     oldName: "",
     newCode: "YR29",
-    newName: "",
+    newName: "Grapefruit",
     hex: "#d76c3b"
   },
   {
     oldCode: "YR20",
     oldName: "",
     newCode: "YR37",
-    newName: "",
+    newName: "Roasted Cashew",
     hex: "#d18360"
   },
   {
     oldCode: "YR107",
     oldName: "",
     newCode: "YR38",
-    newName: "",
+    newName: "Burnt Ochre",
     hex: "#d77e4f"
   },
   {
     oldCode: "YR212",
     oldName: "",
     newCode: "Y43",
-    newName: "",
+    newName: "Warm Beige",
     hex: "#dac4bd"
   },
   {
     oldCode: "YR6",
     oldName: "",
     newCode: "Y48",
-    newName: "",
+    newName: "Light Apricot",
     hex: "#d7a554"
   },
   {
     oldCode: "YR34",
     oldName: "",
     newCode: "Y210",
-    newName: "",
+    newName: "Pumpkin Yellow",
     hex: "#b97317"
   }
 

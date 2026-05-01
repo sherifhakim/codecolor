@@ -226,16 +226,14 @@ export default function Generator() {
 
     const originalRandom = Math.random;
     let randomCalls = 0;
-    
-    // The HARMONY_MODES array in palette-engine.ts has 9 elements:
-    // 0-2: Analogous, 3-4: Triadic, 5: Split Complementary, 6: Square, 7: Monochromatic, 8: Complementary
+
+    // The HARMONY_MODES array in palette-engine.ts has 6 elements:
+    // 0-2: Analogous, 3: Split Complementary, 4: Monochromatic, 5: Complementary
     const HARMONY_INDEX: Record<string, number> = {
-      "Analogous": 0,
-      "Triadic": 0.34,
-      "Split Complementary": 0.56,
-      "Square": 0.67,
-      "Monochromatic": 0.78,
-      "Complementary": 0.89
+      "Analogous": 0, // index 0
+      "Split Complementary": 0.51, // index 3 (0.51 * 6 = 3.06)
+      "Monochromatic": 0.68, // index 4 (0.68 * 6 = 4.08)
+      "Complementary": 0.85 // index 5 (0.85 * 6 = 5.1)
     };
 
     Math.random = function () {
@@ -315,7 +313,7 @@ export default function Generator() {
           <h1 className="text-xl sm:text-2xl font-bold font-serif text-stone-800 tracking-tight shrink-0">CodeColor</h1>
           <div className="text-xs sm:text-sm font-medium text-stone-500 hidden sm:block truncate shrink">Find your perfect palette</div>
         </div>
-        
+
         <div className="flex items-center gap-2 shrink-0">
           <Select value={harmony} onValueChange={(v: string) => { setHarmony(v); generatePalette(styleMode, count, palette, v); }}>
             <SelectTrigger className="w-[130px] sm:w-[160px] text-xs h-8 bg-white border-stone-200 shadow-sm pointer-events-auto">
@@ -325,10 +323,8 @@ export default function Generator() {
               <SelectItem value="Random" className="text-xs">Random</SelectItem>
               <SelectItem value="Analogous" className="text-xs">Analogous</SelectItem>
               <SelectItem value="Complementary" className="text-xs">Complementary</SelectItem>
-              <SelectItem value="Triadic" className="text-xs">Triadic</SelectItem>
               <SelectItem value="Split Complementary" className="text-xs">Split Complementary</SelectItem>
               <SelectItem value="Monochromatic" className="text-xs">Monochromatic</SelectItem>
-              <SelectItem value="Square" className="text-xs">Square</SelectItem>
             </SelectContent>
           </Select>
         </div>
